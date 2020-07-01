@@ -12,7 +12,7 @@ view: patient_condition_covid {
 #   }
 
   derived_table: {
-    explore_source: fhir_ccf {
+    explore_source: fhir_hcls {
       column: patient_id { field: analytics_island_hopping.patient_ccf }
       column: event_date { field: analytics_island_hopping.admission_date }
       column: organization_id { field: analytics_island_hopping.organization_name }
@@ -59,7 +59,7 @@ view: patient_condition_covid_suspected {
 #   }
 
   derived_table: {
-    explore_source: fhir_ccf {
+    explore_source: fhir_hcls {
       column: patient_id { field: analytics_island_hopping.patient_ccf }
       column: event_date { field: analytics_island_hopping.admission_date }
       column: organization_id { field: analytics_island_hopping.organization_name }
@@ -106,7 +106,7 @@ view: patient_condition_death {
 #   }
 
   derived_table: {
-    explore_source: fhir_ccf {
+    explore_source: fhir_hcls {
       column: patient_id { field: analytics_island_hopping.patient_ccf }
       column: event_date { field: analytics_island_hopping.admission_date }
       column: organization_id { field: analytics_island_hopping.organization_name }
@@ -153,7 +153,7 @@ view: patient_home_monitor {
 #   }
 
   derived_table: {
-    explore_source: fhir_ccf {
+    explore_source: fhir_hcls {
       column: patient_id { field: analytics_island_hopping.patient_ccf }
       column: event_date { field: analytics_island_hopping.admission_date }
       column: organization_id { field: analytics_island_hopping.organization_name }
@@ -200,7 +200,7 @@ view: patient_hospital_admission {
 #   }
 
   derived_table: {
-    explore_source: fhir_ccf {
+    explore_source: fhir_hcls {
       column: patient_id { field: analytics_island_hopping.patient_ccf }
       column: event_date { field: analytics_island_hopping.admission_date }
       column: organization_id { field: analytics_island_hopping.organization_name }
@@ -247,7 +247,7 @@ view: patient_hospital_discharge {
 #   }
 
   derived_table: {
-    explore_source: fhir_ccf {
+    explore_source: fhir_hcls {
       column: patient_id { field: analytics_island_hopping.patient_ccf }
       column: event_date { field: analytics_island_hopping.discharge_date }
       column: organization_id { field: analytics_island_hopping.organization_name }
@@ -294,7 +294,7 @@ view: patient_location_bed {
 #   }
 
   derived_table: {
-    explore_source: fhir_ccf {
+    explore_source: fhir_hcls {
       column: patient_id { field: analytics_island_hopping.patient_ccf }
       column: event_date { field: analytics_island_hopping.admission_date }
       column: organization_id { field: analytics_island_hopping.organization_name }
@@ -341,7 +341,7 @@ view: patient_location_icu {
 #   }
 
   derived_table: {
-    explore_source: fhir_ccf {
+    explore_source: fhir_hcls {
       column: patient_id { field: analytics_island_hopping.patient_ccf }
       column: event_date { field: analytics_island_hopping.admission_date }
       column: organization_id { field: analytics_island_hopping.organization_name }
@@ -389,7 +389,7 @@ view: patient_snf_admission {
 #   }
 
   derived_table: {
-    explore_source: fhir_ccf {
+    explore_source: fhir_hcls {
       column: patient_id { field: analytics_island_hopping.patient_ccf }
       column: organization_id { field: analytics_island_hopping.organization_name }
       column: event_date { field: analytics_island_hopping.admission_date }
@@ -831,7 +831,7 @@ view: final_patient_status_patient_details {
   derived_table: {
     publish_as_db_view: yes
     datagroup_trigger: once_daily
-    explore_source: fhir_ccf {
+    explore_source: fhir_hcls {
       column: patient_ccf { field: analytics_island_hopping.patient_ccf }
       column: min_organization_name { field: analytics.min_organization_name }
       column: min_practitioner_name { field: analytics.min_practitioner_name }

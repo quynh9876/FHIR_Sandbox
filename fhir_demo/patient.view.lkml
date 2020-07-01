@@ -1926,6 +1926,7 @@ view: patient__address {
   }
 
   dimension: line {
+    hidden: yes
     group_label: "{{ _view._name }}"
     type: string
     sql: ${TABLE}.line ;;
@@ -1965,6 +1966,15 @@ view: patient__address {
     group_label: "{{ _view._name }}"
     type: string
     sql: ${TABLE}.use ;;
+  }
+}
+
+view: patient__address__line {
+  label: "Patient"
+  dimension: patient__address__line {
+    group_label: "{{ _view._name }}"
+    type: string
+    sql: ${patient__address__line.SQL_TABLE_NAME} ;;
   }
 }
 
@@ -2490,6 +2500,7 @@ view: patient__name {
   }
 
   dimension: given {
+    hidden: yes
     group_label: "{{ _view._name }}"
     type: string
     sql: ${TABLE}.given ;;
@@ -2502,12 +2513,14 @@ view: patient__name {
   }
 
   dimension: prefix {
+    hidden: yes
     group_label: "{{ _view._name }}"
     type: string
     sql: ${TABLE}.prefix ;;
   }
 
   dimension: suffix {
+    hidden: yes
     group_label: "{{ _view._name }}"
     type: string
     sql: ${TABLE}.suffix ;;
@@ -2523,6 +2536,15 @@ view: patient__name {
     group_label: "{{ _view._name }}"
     type: string
     sql: ${TABLE}.use ;;
+  }
+}
+
+view: patient__name__given {
+  label: "Patient"
+  dimension: patient__name__given {
+    group_label: "{{ _view._name }}"
+    type: string
+    sql: ${patient__name__given.SQL_TABLE_NAME} ;;
   }
 }
 

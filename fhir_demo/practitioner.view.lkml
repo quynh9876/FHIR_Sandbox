@@ -1194,6 +1194,7 @@ view: practitioner__name {
   }
 
   dimension: given {
+    hidden: yes
     group_label: "{{ _view._name }}"
     type: string
     sql: ${TABLE}.given ;;
@@ -1206,12 +1207,14 @@ view: practitioner__name {
   }
 
   dimension: prefix {
+    hidden: yes
     group_label: "{{ _view._name }}"
     type: string
     sql: ${TABLE}.prefix ;;
   }
 
   dimension: suffix {
+    hidden: yes
     group_label: "{{ _view._name }}"
     type: string
     sql: ${TABLE}.suffix ;;
@@ -1227,6 +1230,14 @@ view: practitioner__name {
     group_label: "{{ _view._name }}"
     type: string
     sql: ${TABLE}.use ;;
+  }
+}
+view: practitioner__name__given {
+  label: "Patient"
+  dimension: practitioner__name__given {
+    group_label: "{{ _view._name }}"
+    type: string
+    sql: ${practitioner__name__given.SQL_TABLE_NAME} ;;
   }
 }
 
