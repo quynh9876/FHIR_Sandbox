@@ -28,7 +28,7 @@ view: analytics {
     ]
     # sql: ${nested_structs.encounter__period__start_raw} ;;
     # NOTE : Syntheia data only goes to Sept 2019 - update date filter to push that to today
-    sql: TIMESTAMP_ADD(cast(${nested_structs.encounter__period__start_raw} as timestamp), INTERVAL DATE_DIFF(current_date(), '2019-09-23', day) day) ;;
+    sql: TIMESTAMP_ADD(cast(${nested_structs.encounter__period__start_raw} as timestamp), INTERVAL DATE_DIFF(current_date(), '2019-09-15', day) day) ;;
   }
 
   dimension_group: discharge {
@@ -49,7 +49,7 @@ view: analytics {
     ]
     # sql: ${nested_structs.encounter__period__end_raw} ;;
     # NOTE : Syntheia data only goes to Sept 2019 - update date filter to push that to today
-    sql: TIMESTAMP_ADD(cast(${nested_structs.encounter__period__end_raw} as timestamp), INTERVAL DATE_DIFF(current_date(), '2019-09-23', day) day) ;;
+    sql: TIMESTAMP_ADD(cast(${nested_structs.encounter__period__end_raw} as timestamp), INTERVAL DATE_DIFF(current_date(), '2019-09-15', day) day) ;;
   }
 
   dimension_group: length_of_stay {
@@ -121,7 +121,82 @@ view: analytics {
   dimension: patient_name {
     group_label: "Patient Information"
     label: "Patient Name"
-    sql: concat(${patient__name.family}, ', ',${patient__name__given.patient__name__given}) ;;
+    sql: concat(substr(${patient__name__given.patient__name__given},1,length(${patient__name__given.patient__name__given})-3), ' ',substr(${patient__name.family},1,length(${patient__name.family})-3)) ;;
+    link: {
+      label: "{{ value }} - Deep Dive"
+      url: "/dashboards/549?Patient%20Name={{ value }}"
+      icon_url: "http://www.google.com/s2/favicons?domain=www.looker.com"
+    }
+    action: {
+      label: "Text Patient about Appointment"
+      url: "https://desolate-refuge-53336.herokuapp.com/posts"
+      icon_url: "https://www.google.com/s2/favicons?domain_url=http://www.zappier.com"
+      param: {
+        name: "some_auth_code"
+        value: "abc123456"
+      }
+      form_param: {
+        name: "Phone Number"
+        required: yes
+        default: "{{ patient_telephone._value }}"
+      }
+      form_param: {
+        name: "Body"
+        type: textarea
+        required: yes
+        default:
+        "Hi {{ value }} - You have an appt coming up soon. Reply with 1 to confirm your appt, 2 to cancel your appt.
+        - {{ practitioner_name._value }}"
+      }
+    }
+    action: {
+      label: "Create Ticket"
+      url: "https://desolate-refuge-53336.herokuapp.com/posts"
+      icon_url: "https://www.google.com/s2/favicons?domain_url=http://www.servicenow.com"
+      param: {
+        name: "some_auth_code"
+        value: "abc123456"
+      }
+      form_param: {
+        type: select
+        name: "Team"
+        option: {
+          name: "Medical Records Error"
+        }
+        option: {
+          name: "Provider Escalation"
+        }
+        option: {
+          name: "Other"
+        }
+        required: yes
+        default: "Provider Escalation"
+      }
+      form_param: {
+        type: select
+        name: "Priority"
+        option: {
+          name: "P1 - High"
+        }
+        option: {
+          name: "P2 - Medium"
+        }
+        option: {
+          name: "P3 - Low"
+        }
+        required: yes
+        default: "P1 - High"
+      }
+      form_param: {
+        name: "Ticket Description"
+        type: textarea
+        required: yes
+        default:
+        "Hi team -
+        We need to review {{ value }}'s case.
+        - {{ practitioner_name._value }}"
+      }
+    }
   }
 
 ##################
@@ -222,14 +297,33 @@ view: analytics {
     sql: ${organization.name} ;;
     drill_fields: [practitioner_name, patient_age_tier, patient_postal_code]
     link: {
-      label: "{{ value }} Deep Dive"
-      url: "/dashboards/ccf_fhir::3__facility?Facility%20Name={{ value }}"
+      label: "{{ value }} - Deep Dive"
+      url: "/dashboards/547?Facility%20Name={{ value }}"
+      icon_url: "http://www.google.com/s2/favicons?domain=www.looker.com"
+    }
+    link: {
+      label: "{{ value }} - Vulnerability Score & SDOH"
+      url: "/dashboards/546?Hospital%20Name={{ value }}"
       icon_url: "http://www.google.com/s2/favicons?domain=www.looker.com"
     }
     link: {
       label: "{{ value }} - Google News Search"
       url: "https://news.google.com/search?q={{ value }}%20cleveland clinic"
       icon_url: "http://www.google.com/s2/favicons?domain=www.news.google.com"
+    }
+    action: {
+      label: "Call Hospital with Question"
+      url: "https://desolate-refuge-53336.herokuapp.com/posts"
+      icon_url: "https://www.google.com/s2/favicons?domain_url=http://www.zappier.com"
+      param: {
+        name: "some_auth_code"
+        value: "abc123456"
+      }
+      form_param: {
+        name: "Phone Number"
+        required: yes
+        default: "{{ organization_telephone._value }}"
+      }
     }
   }
   measure: min_organization_name {
@@ -309,11 +403,11 @@ view: analytics {
 
   dimension: practitioner_name {
     group_label: "Practitioner Identifier"
-    label: "Name (Pracitioner)"
-    sql: concat('Dr.', ${practitioner__name.family}, ', ', ${practitioner__name__given.practitioner__name__given}) ;;
+    sql: concat('Dr. ', substr(${practitioner__name__given.practitioner__name__given},1,length(${practitioner__name__given.practitioner__name__given})-3), ' ', substr(${practitioner__name.family},1,length(${practitioner__name.family})-3))  ;;
+    # sql: concat(substr(${patient__name.family},1,length(${patient__name.family})-3), ', ',substr(${patient__name__given.patient__name__given},1,length(${patient__name__given.patient__name__given})-3)) ;;
     link: {
       label: "{{ value }} Deep Dive"
-      url: "/dashboards/ccf_fhir::4__provider?Provider%20Name={{ value }}"
+      url: "/dashboards/548?Provider%20Name={{ value }}"
       icon_url: "http://www.google.com/s2/favicons?domain=www.looker.com"
     }
     link: {
@@ -403,6 +497,10 @@ view: analytics {
       label: "Patient Age Tier"
       value: "patient_age_tier"
     }
+    allowed_value: {
+      label: "Patient Race"
+      value: "patient_race"
+    }
   }
 
   dimension: pivot_value {
@@ -413,6 +511,7 @@ view: analytics {
     {% elsif pivot._parameter_value == 'practitioner_name' %} ${practitioner_name}
     {% elsif pivot._parameter_value == 'patient_postal_code' %} ${patient_postal_code}
     {% elsif pivot._parameter_value == 'patient_age_tier' %} ${patient_age_tier}
+    {% elsif pivot._parameter_value == 'patient_race' %} ${patient_race}
     {% else %} ${organization_name}
     {% endif %}
     ;;
@@ -731,7 +830,7 @@ view: analytics {
   dimension: covid_suspected_set {
     hidden: yes
     type: string
-    sql: '82423001, 196416002' ;;
+    sql: '82423001', '196416002' ;;
   }
 
   dimension: covid_suspected_yn {
@@ -826,8 +925,6 @@ view: analytics {
 ## ED Visits
 
   measure: count_ed_visits {
-    ## Note: 553 does not appear in contacttype encounters
-    hidden: yes
     group_label: "Encounters"
     label: "# Encounters - ED Visits"
     # description: "# Encounters to emergency department (contacttype = 553)"
@@ -1327,7 +1424,9 @@ view: analytics {
 
   set: drill {
     fields: [
+      encounter.id,
       practitioner_name,
+      patient_name,
       admission_date,
       encounter_type,
       count_total_patients
