@@ -5,7 +5,7 @@ view: procedure {
   drill_fields: [id]
 
   dimension: id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     primary_key: yes
     type: string
     sql: ${TABLE}.id ;;
@@ -887,13 +887,13 @@ view: procedure__shr_action_performed_context_extension__shr_action_status_exten
 view: procedure__code__coding {
   label: "Procedure"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
@@ -926,7 +926,7 @@ view: procedure__code {
   }
 
   dimension: text {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.text ;;
   }
@@ -953,7 +953,7 @@ view: procedure__subject {
   }
 
   dimension: patient_id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.patientId ;;
   }
@@ -1220,13 +1220,13 @@ view: procedure__subject__identifier__type {
 view: procedure__reason_reference {
   label: "Procedure"
   dimension: condition_id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.conditionId ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
@@ -1559,7 +1559,7 @@ view: procedure__context {
   }
 
   dimension: encounter_id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.encounterId ;;
   }

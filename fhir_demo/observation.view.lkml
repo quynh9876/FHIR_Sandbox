@@ -5,7 +5,7 @@ view: observation {
   drill_fields: [id]
 
   dimension: id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     primary_key: yes
     type: string
     sql: ${TABLE}.id ;;
@@ -262,13 +262,13 @@ view: observation__data_absent_reason {
 view: observation__code__coding {
   label: "Observation"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
@@ -301,7 +301,7 @@ view: observation__code {
   }
 
   dimension: text {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.text ;;
   }
@@ -340,7 +340,7 @@ view: observation__subject {
   }
 
   dimension: patient_id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.patientId ;;
   }
@@ -1216,7 +1216,7 @@ view: observation__context {
   }
 
   dimension: encounter_id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.encounterId ;;
   }
@@ -1564,7 +1564,7 @@ view: observation__value {
   }
 
   dimension: string {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.string ;;
   }
@@ -1594,7 +1594,7 @@ view: observation__value__period {
 view: observation__value__quantity {
   label: "Observation"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
@@ -1612,13 +1612,13 @@ view: observation__value__quantity {
   }
 
   dimension: unit {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.unit ;;
   }
 
   dimension: value {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: number
     sql: ${TABLE}.value ;;
   }
@@ -1804,13 +1804,13 @@ view: observation__value__range__low {
 view: observation__value__codeable_concept__coding {
   label: "Observation"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
@@ -1843,7 +1843,7 @@ view: observation__value__codeable_concept {
   }
 
   dimension: text {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.text ;;
   }
@@ -3412,13 +3412,13 @@ view: observation__component__reference_range__age__low {
 view: observation__component__code__coding {
   label: "Observation"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
@@ -3451,7 +3451,7 @@ view: observation__component__code {
   }
 
   dimension: text {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.text ;;
   }
@@ -3586,7 +3586,7 @@ view: observation__component__value__period {
 view: observation__component__value__quantity {
   label: "Observation"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
@@ -3604,13 +3604,13 @@ view: observation__component__value__quantity {
   }
 
   dimension: unit {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.unit ;;
   }
 
   dimension: value {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: number
     sql: ${TABLE}.value ;;
   }
@@ -4066,13 +4066,13 @@ view: observation__meta__tag {
 view: observation__category__coding {
   label: "Observation"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }

@@ -14,7 +14,7 @@ view: encounter {
   drill_fields: [id]
 
   dimension: id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     primary_key: yes
     type: string
     sql: ${TABLE}.id ;;
@@ -464,13 +464,13 @@ view: encounter__part_of__identifier__type {
 view: encounter__reason__coding {
   label: "Encounter"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
@@ -540,7 +540,7 @@ view: encounter__subject {
   }
 
   dimension: patient_id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.patientId ;;
   }
@@ -1086,13 +1086,13 @@ view: encounter__appointment__identifier__type {
 view: encounter__type__coding {
   label: "Encounter"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
@@ -1125,7 +1125,7 @@ view: encounter__type {
   }
 
   dimension: text {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.text ;;
   }
@@ -1161,7 +1161,7 @@ view: encounter__participant__individual {
   }
 
   dimension: practitioner_id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.practitionerId ;;
   }
@@ -1776,7 +1776,7 @@ view: encounter__text {
 view: encounter__class {
   label: "Encounter"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
@@ -2340,7 +2340,7 @@ view: encounter__incoming_referral__identifier__type {
 view: encounter__period {
   label: "Encounter"
   dimension_group: end {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: time
     timeframes: [
       raw,
@@ -2355,7 +2355,7 @@ view: encounter__period {
   }
 
   dimension_group: start {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: time
     timeframes: [
       raw,
@@ -3525,13 +3525,13 @@ view: encounter__hospitalization__special_courtesy {
 view: encounter__hospitalization__discharge_disposition__coding {
   label: "Encounter"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
@@ -3564,7 +3564,7 @@ view: encounter__hospitalization__discharge_disposition {
   }
 
   dimension: text {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.text ;;
   }
@@ -4206,7 +4206,7 @@ view: encounter__service_provider {
   }
 
   dimension: organization_id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.organizationId ;;
   }

@@ -5,7 +5,7 @@ view: condition {
   drill_fields: [id]
 
   dimension: id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     primary_key: yes
     type: string
     sql: ${TABLE}.id ;;
@@ -42,7 +42,7 @@ view: condition {
   }
 
   dimension: clinical_status {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.clinicalStatus ;;
   }
@@ -767,13 +767,13 @@ view: condition__note {
 view: condition__code__coding {
   label: "Condition"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
@@ -806,7 +806,7 @@ view: condition__code {
   }
 
   dimension: text {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.text ;;
   }
@@ -1160,7 +1160,7 @@ view: condition__subject {
   }
 
   dimension: patient_id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.patientId ;;
   }
@@ -2237,7 +2237,7 @@ view: condition__context {
   }
 
   dimension: encounter_id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.encounterId ;;
   }

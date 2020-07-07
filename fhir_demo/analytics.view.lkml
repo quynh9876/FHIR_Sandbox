@@ -26,7 +26,9 @@ view: analytics {
       quarter,
       year
     ]
-    sql: ${nested_structs.encounter__period__start_raw} ;;
+    # sql: ${nested_structs.encounter__period__start_raw} ;;
+    # NOTE : Syntheia data only goes to Sept 2019 - update date filter to push that to today
+    sql: TIMESTAMP_ADD(cast(${nested_structs.encounter__period__start_raw} as timestamp), INTERVAL DATE_DIFF(current_date(), '2019-09-23', day) day) ;;
   }
 
   dimension_group: discharge {
@@ -45,7 +47,9 @@ view: analytics {
       quarter,
       year
     ]
-    sql: ${nested_structs.encounter__period__end_raw} ;;
+    # sql: ${nested_structs.encounter__period__end_raw} ;;
+    # NOTE : Syntheia data only goes to Sept 2019 - update date filter to push that to today
+    sql: TIMESTAMP_ADD(cast(${nested_structs.encounter__period__end_raw} as timestamp), INTERVAL DATE_DIFF(current_date(), '2019-09-23', day) day) ;;
   }
 
   dimension_group: length_of_stay {
@@ -71,14 +75,14 @@ view: analytics {
     group_label: "Patient Information"
     label: "Patient Age"
     sql: date_diff(current_date, ${patient.birth_date}, year) ;;
-    drill_fields: [patient_gender, patient_postal_code, patient_ccf]
+    drill_fields: [patient_gender, patient_postal_code]
   }
   dimension: patient_age_color {
     group_label: "Patient Information"
     label: "Patient Age (Color)"
     description: "<50 is green, 50-70 orange, 70+ red"
     sql: ${patient_age} ;;
-    drill_fields: [patient_gender, patient_postal_code, patient_ccf]
+    drill_fields: [patient_gender, patient_postal_code]
     html:
       {%    if value > 70 %} <font color="red">{{ rendered_value }}</font>
       {% elsif value > 50 %} <font color="orange">{{ rendered_value }}</font>
@@ -99,14 +103,14 @@ view: analytics {
     tiers: [10,20,30,40,50,60,70,80,90]
     style: integer
     sql: ${patient_age} ;;
-    drill_fields: [patient_age, patient_gender, patient_postal_code, patient_ccf]
+    drill_fields: [patient_age, patient_gender, patient_postal_code]
   }
 
   dimension: patient_gender {
     group_label: "Patient Information"
     label: "Patient Gender"
     sql: ${patient.gender} ;;
-    drill_fields: [patient_age_tier, patient_postal_code, patient_ccf]
+    drill_fields: [patient_age_tier, patient_postal_code]
   }
   measure: min_gender {
     group_label: "Z - Island Hop Exercise"
@@ -114,16 +118,11 @@ view: analytics {
     sql: ${patient_gender} ;;
   }
 
-#   dimension: patient_name {
-#     group_label: "Patient Information"
-#     label: "Patient Name"
-#     sql: concat(
-#             ${patient_name__prefix}, ' '
-#             --,${patient__name.given}, ' '
-#             --, ${patient__name.family}, ', '
-#             --, ${patient__name.suffix}
-#             ) ;;
-#   }
+  dimension: patient_name {
+    group_label: "Patient Information"
+    label: "Patient Name"
+    sql: concat(${patient__name.family}, ', ',${patient__name__given.patient__name__given}) ;;
+  }
 
 ##################
 ### Patient Location
@@ -133,6 +132,7 @@ view: analytics {
     group_label: "Patient Location"
     label: "Patient City"
     sql: ${patient__address.city} ;;
+    drill_fields: [patient_location]
   }
 
   dimension: patient_postal_code {
@@ -140,7 +140,16 @@ view: analytics {
     label: "Patient Zip"
     sql: ${patient__address.postal_code} ;;
     map_layer_name: us_zipcode_tabulation_areas
-    drill_fields: [patient_age_tier, patient_gender, patient_ccf]
+    drill_fields: [patient_age_tier, patient_gender, patient_location]
+  }
+
+  dimension: patient_location {
+    group_label: "Patient Location"
+    label: "Patient Location"
+    type: location
+    sql_latitude: ${nested_structs.patient__address__geolocation__latitude__value__decimal} ;;
+    sql_longitude: ${nested_structs.patient__address__geolocation__longitude__value__decimal} ;;
+    map_layer_name: us_zipcode_tabulation_areas
   }
 
   measure: min_postal_code {
@@ -154,24 +163,52 @@ view: analytics {
     label: "Patient State"
     sql: ${patient__address.state} ;;
   }
+
   measure: min_state {
     group_label: "Z - Island Hop Exercise"
     type: min
     sql: ${patient_state} ;;
   }
 
+  dimension: patient_birth_country {
+    group_label: "Patient Information"
+    label: "Patient Birth Country"
+    sql: ${nested_structs.patient__birth_place__value__address__country} ;;
+  }
+
+  dimension: patient_language {
+    group_label: "Patient Information"
+    label: "Patient Language"
+    sql: ${patient__communication__language__coding.display} ;;
+  }
+
+  dimension: patient_telephone {
+    group_label: "Patient Information"
+    label: "Patient Telephone"
+    sql: ${patient__telecom.value} ;;
+    type: string
+  }
+
+  dimension: patient_race {
+    group_label: "Patient Information"
+    label: "Patient Race"
+    sql: ${nested_structs.patient__us_core_race__omb_category__value__coding__display} ;;
+    type: string
+  }
+
 ##################
 ### Patient Status
 ##################
 
-  dimension: is_deceased {
-    group_label: "Patient Information"
-    sql: ${nested_structs.patient__deceased__boolean} ;;
-  }
-
   dimension: is_married {
     group_label: "Patient Information"
-    sql: ${patient__marital_status__coding.code} ;;
+    sql:
+      case
+        when ${patient__marital_status__coding.display} = 'M' then 'Married'
+        when ${patient__marital_status__coding.display} = 'S' then 'Single'
+        else ${patient__marital_status__coding.display}
+      end
+        ;;
   }
 
 ##################
@@ -179,11 +216,11 @@ view: analytics {
 ##################
 
   dimension: organization_name {
-    group_label: "Location"
-    label: "Location - 1 - Hospital Name"
+    group_label: "Hospital Information"
+    label: "Hospital Name"
     description: "Name of hospital where encounter occurrred"
     sql: ${organization.name} ;;
-    drill_fields: [practitioner_name, patient_age_tier, patient_postal_code, patient_ccf, location_si]
+    drill_fields: [practitioner_name, patient_age_tier, patient_postal_code]
     link: {
       label: "{{ value }} Deep Dive"
       url: "/dashboards/ccf_fhir::3__facility?Facility%20Name={{ value }}"
@@ -200,206 +237,70 @@ view: analytics {
     type: min
     sql: ${organization_name} ;;
   }
-  dimension: location_lvl {
-    group_label: "Location"
-    label: "Location - 4 - Level"
-    description: "Level of hospital where encounter occurrred"
-    sql: ${identifier_location_lvl.name} ;;
-    drill_fields: [location_ro]
+
+  dimension: organization_city {
+    group_label: "Hospital Information"
+    label: "Hospital City"
+    sql: ${organization__address.city} ;;
+    drill_fields: [patient_location]
   }
-  dimension: location_bu {
-    group_label: "Location"
-    label: "Location - 3 - Building"
-    description: "Building of hospital where encounter occurrred"
-    sql: ${identifier_location_bu.name} ;;
-    drill_fields: [location_lvl]
+
+  dimension: organization_postal_code {
+    group_label: "Hospital Information"
+    label: "Hospital Zip"
+    sql: ${organization__address.postal_code} ;;
+    map_layer_name: us_zipcode_tabulation_areas
+    drill_fields: [patient_age_tier, patient_gender, patient_location]
   }
-  dimension: location_bd {
-    group_label: "Location"
-    label: "Location - 6 - Bed"
-    description: "Bed of hospital where encounter occurrred"
-    sql: ${identifier_location_bd.name} ;;
-  }
-  dimension: location_ro {
-    group_label: "Location"
-    label: "Location - 5 - Room"
-    description: "Room of hospital where encounter occurrred"
-    sql: ${identifier_location_ro.name} ;;
-    drill_fields: [location_bd]
-  }
-  dimension: location_si {
-    group_label: "Location"
-    label: "Location - 2 - Site"
-    description: "Hospital site where encounter occurrred"
-    sql: ${identifier_location_si.name} ;;
-    drill_fields: [location_bu]
+
+  dimension: organization_telephone {
+    group_label: "Hospital Information"
+    label: "Hospital Telephone"
+    sql: ${organization__telecom.value} ;;
+    type: string
   }
 
 ##################
 ### Patient Identifier
 ##################
 
-  dimension: patient_epi {
-    group_label: "Patient Identifier"
-    label: "EPI"
-    sql: ${identifier_patient_epi.value} ;;
-  }
-  dimension: patient_ccf {
-    group_label: "Patient Identifier"
-    label: "CCF (Patient)"
-    sql: ${identifier_patient_ccf.value} ;;
-    link: {
-      label: "Patient Deep Dive"
-      url: "/dashboards/ccf_fhir::5__patient?CCF={{ value }}"
-      icon_url: "http://www.google.com/s2/favicons?domain=www.looker.com"
-    }
-  }
-#   dimension: ccf_test_bind_dates_only {
-#     group_label: "Z - ccf test"
-#     sql: ${ccf_test_bind_dates_only.value} ;;
-#   }
-  # dimension: ccf_test_bind_all_filters {
-  #   group_label: "Z - ccf test"
-  #   sql: ${ccf_test_bind_all_filters.value} ;;
-  # }
-#   dimension: ccf_test_no_filter {
-#     group_label: "Z - ccf test"
-#     sql: ${ccf_test_no_filter.value} ;;
-#   }
-  dimension: patient_memrn {
-    group_label: "Patient Identifier"
-    label: "Mem RN"
-    sql: ${identifier_patient_memrn.value} ;;
-  }
-  dimension: patient_fla_ccf {
-    group_label: "Patient Identifier"
-    label: "Florida CCF"
-    sql: ${identifier_patient_fla_ccf.value} ;;
-  }
-  dimension: patient_sb {
-    group_label: "Patient Identifier"
-    label: "SB"
-    sql: ${identifier_patient_sb.value} ;;
-  }
-  dimension: patient_dl {
-    group_label: "Patient Identifier"
-    label: "DL"
-    sql: ${identifier_patient_dl.value} ;;
-  }
-  dimension: patient_fvmrn {
-    group_label: "Patient Identifier"
-    label: "Fvm RN"
-    sql: ${identifier_patient_fvmrn.value} ;;
-  }
-  dimension: patient_irisreg {
-    group_label: "Patient Identifier"
-    label: "Iris Reg"
-    sql: ${identifier_patient_irisreg.value} ;;
-  }
-  dimension: patient_cchs_er_hch {
-    group_label: "Patient Identifier"
-    label: "Cchs Er Hch"
-    sql: ${identifier_patient_cchs_er_hch.value} ;;
-  }
-  dimension: patient_cchs_wr_mmh {
-    group_label: "Patient Identifier"
-    label: "Cchs Wr Mmh"
-    sql: ${identifier_patient_cchs_wr_mmh.value} ;;
-  }
-  dimension: patient_avmrn {
-    group_label: "Patient Identifier"
-    label: "Avm RN"
-    sql: ${identifier_patient_avmrn.value} ;;
-  }
-  dimension: patient_agmrn {
-    group_label: "Patient Identifier"
-    label: "Agm RN"
-    sql: ${identifier_patient_agmrn.value} ;;
-  }
-  dimension: patient_agldmrn {
-    group_label: "Patient Identifier"
-    label: "Agldm RN"
-    sql: ${identifier_patient_agldmrn.value} ;;
-  }
-  dimension: patient_lumrn {
-    group_label: "Patient Identifier"
-    label: "Lum RN"
-    sql: ${identifier_patient_lumrn.value} ;;
-  }
-  dimension: patient_cpc_agambmr {
-    group_label: "Patient Identifier"
-    label: "CPC Agamb MR"
-    sql: ${identifier_patient_cpc_agambmr.value} ;;
-  }
-  dimension: patient_cpc_aghs {
-    group_label: "Patient Identifier"
-    label: "CPC Aghs"
-    sql: ${identifier_patient_cpc_aghs.value} ;;
-  }
-  dimension: patient_cchs_er_sph {
-    group_label: "Patient Identifier"
-    label: "Cchs Er Sph"
-    sql: ${identifier_patient_cchs_er_sph.value} ;;
-  }
-  dimension: patient_mychart {
-    group_label: "Patient Identifier"
-    label: "MyChart"
-    sql: ${identifier_patient_mychart.value} ;;
-  }
-  dimension: patient_cpc_rfpi {
-    group_label: "Patient Identifier"
-    label: "CPC Rfpi"
-    sql: ${identifier_patient_cpc_rfpi.value} ;;
-  }
-  dimension: patient_selmed_epi {
-    group_label: "Patient Identifier"
-    label: "Selmed EPI"
-    sql: ${identifier_patient_selmed_epi.value} ;;
-  }
-  dimension: patient_selmed_fh {
-    group_label: "Patient Identifier"
-    label: "Selmed FH"
-    sql: ${identifier_patient_selmed_fh.value} ;;
-  }
-
 ##################
 ### Encounter Infomation
 ##################
 
-  dimension: encounter_csn {
-    group_label: "Encounter Information"
-    label: "CSN"
-    sql: ${identifier_encounter_csn.value} ;;
+  dimension: encounter_type {
+    hidden: yes
+    type: string
+    sql: ${nested_structs.encounter__class__code} ;;
   }
-  dimension: encounter_uci {
+
+  dimension: encounter_type_format {
     group_label: "Encounter Information"
-    label: "UCI"
-    sql: ${identifier_encounter_uci.value} ;;
+    label: "Encounter Type"
+    description: "Outpatient, Inpatient, Emergency Department"
+    sql:
+      case
+        when ${encounter_type} = 'AMB' then 'Outpatient'
+        when ${encounter_type} = 'EMER' then 'Emergency'
+        when ${encounter_type} = 'IMP' then 'Inpatient'
+      end ;;
+    type: string
   }
-  dimension: encounter_har {
+
+  dimension: encounter_code {
     group_label: "Encounter Information"
-    label: "HAR"
-    sql: ${identifier_encounter_har.value} ;;
+    label: "Encounter Code"
+    description: "SNOMED-CT code for visit"
+    sql: ${encounter__type__coding.code};;
+    type: string
   }
-  dimension: encounter_contacttype {
+
+  dimension: encounter_reason_for_visit {
     group_label: "Encounter Information"
-    label: "Contact Type"
-    sql: ${identifier_encounter_contacttype.value} ;;
-  }
-  dimension: encounter_bedid {
-    group_label: "Encounter Information"
-    label: "Bed ID"
-    sql: ${identifier_encounter_bedid.value} ;;
-  }
-  dimension: encounter_adtype {
-    group_label: "Encounter Information"
-    label: "Ad Type"
-    sql: ${identifier_encounter_adtype.value} ;;
-  }
-  dimension: encounter_chargeslip {
-    group_label: "Encounter Information"
-    label: "Charge Slip"
-    sql: ${identifier_encounter_chargeslip.value} ;;
+    label: "Encounter Reaspm for Visit"
+    description: "Name for SNOMED-CT reason for visit code for visit"
+    sql: ${encounter__type__coding.display};;
+    type: string
   }
 
 ##################
@@ -409,7 +310,7 @@ view: analytics {
   dimension: practitioner_name {
     group_label: "Practitioner Identifier"
     label: "Name (Pracitioner)"
-    sql: ${practitioner__name.family} ;;
+    sql: concat('Dr.', ${practitioner__name.family}, ', ', ${practitioner__name__given.practitioner__name__given}) ;;
     link: {
       label: "{{ value }} Deep Dive"
       url: "/dashboards/ccf_fhir::4__provider?Provider%20Name={{ value }}"
@@ -426,90 +327,57 @@ view: analytics {
     type: min
     sql: ${practitioner_name} ;;
   }
-  dimension: practitioner_ccf {
-    group_label: "Practitioner Identifier"
-    label: "CCF (Pracitioner)"
-    sql: ${identifier_practitioner_ccf.value} ;;
-  }
-  dimension: practitioner_ser_dr_no {
-    group_label: "Practitioner Identifier"
-    label: "Ser Dr No"
-    sql: ${identifier_practitioner_ser_dr_no.value} ;;
-  }
-  dimension: practitioner_npi {
-    group_label: "Practitioner Identifier"
-    label: "NPI"
-    sql: ${identifier_practitioner_npi.value} ;;
-  }
-  dimension: practitioner_ccfdrno {
-    group_label: "Practitioner Identifier"
-    label: "CCF Dr No"
-    sql: ${identifier_practitioner_ccfdrno.value} ;;
-  }
-  dimension: practitioner_atndrw {
-    group_label: "Practitioner Identifier"
-    label: "Atn Drw"
-    sql: ${identifier_practitioner_atndrw.value} ;;
-  }
-  dimension: practitioner_medrno {
-    group_label: "Practitioner Identifier"
-    label: "Me Dr No"
-    sql: ${identifier_practitioner_medrno.value} ;;
-  }
-  dimension: practitioner_lkdrno {
-    group_label: "Practitioner Identifier"
-    label: "Lk Dr No"
-    sql: ${identifier_practitioner_lkdrno.value} ;;
-  }
-  dimension: practitioner_erfdrno {
-    group_label: "Practitioner Identifier"
-    label: "Erf Dr No"
-    sql: ${identifier_practitioner_erfdrno.value} ;;
-  }
-  dimension: practitioner_agambdrno {
-    group_label: "Practitioner Identifier"
-    label: "Agamb Dr No"
-    sql: ${identifier_practitioner_agambdrno.value} ;;
-  }
-  dimension: practitioner_fvludrno {
-    group_label: "Practitioner Identifier"
-    label: "Fvlu Dr No"
-    sql: ${identifier_practitioner_fvludrno.value} ;;
-  }
-  dimension: practitioner_agobdrno {
-    group_label: "Practitioner Identifier"
-    label: "Agob Dr No"
-    sql: ${identifier_practitioner_agobdrno.value} ;;
-  }
-  dimension: practitioner_acdrno {
-    group_label: "Practitioner Identifier"
-    label: "Ac Dr No"
-    sql: ${identifier_practitioner_acdrno.value} ;;
-  }
-  dimension: practitioner_mmdrno {
-    group_label: "Practitioner Identifier"
-    label: "Mm Dr No"
-    sql: ${identifier_practitioner_mmdrno.value} ;;
-  }
 
 ##################
 ### Observation Information
 ##################
 
-  dimension: himprimarycsn {
-    group_label: "Observation Information"
-    label: "Primary CSN"
-    sql: ${identifier_observation_himprimarycsn.value} ;;
+##################
+### Condition Information
+##################
+
+  dimension: comorbidity_code {
+    group_label: "Comorbidity Information"
+    label: "Comorbidity Code"
+    description: "SNOMED-CT code for Comorbidity"
+    sql: ${condition__code__coding.code};;
+    type: string
   }
-  dimension: dischdisposition {
-    group_label: "Observation Information"
-    label: "Discharge Disposition"
-    sql: ${identifier_observation_dischdisposition.value} ;;
+
+  dimension: comorbidity_name {
+    group_label: "Comorbidity Information"
+    label: "Comorbidity Name"
+    description: "Name for SNOMED-CT Comorbidity"
+    sql: ${condition__code__coding.display};;
+    type: string
   }
-  dimension: apptprocedure {
-    group_label: "Observation Information"
-    label: "Appointment Procedure"
-    sql: ${identifier_observation_apptprocedure.value} ;;
+
+##################
+### Procedure Information
+##################
+
+  dimension: procedure_code {
+    group_label: "Procedure Information"
+    label: "Procedure Code"
+    description: "SNOMED-CT code for Procedure"
+    sql: ${procedure__code__coding.code};;
+    type: string
+  }
+
+  dimension: procedure_name {
+    group_label: "Procedure Information"
+    label: "Procedure Name"
+    description: "Name for SNOMED-CT Procedure"
+    sql: ${procedure__code__coding.display};;
+    type: string
+  }
+
+  dimension: procedure_reason {
+    group_label: "Procedure Information"
+    label: "Procedure Reason"
+    description: "Reason for Procedure"
+    sql: ${procedure__reason_reference.display};;
+    type: string
   }
 
 ##################
@@ -544,7 +412,7 @@ view: analytics {
     {% if    pivot._parameter_value == 'organization_name' %} ${organization_name}
     {% elsif pivot._parameter_value == 'practitioner_name' %} ${practitioner_name}
     {% elsif pivot._parameter_value == 'patient_postal_code' %} ${patient_postal_code}
-    {% elsif pivot._parameter_value == 'patient_age_tier' %} ${practitioner_npi}
+    {% elsif pivot._parameter_value == 'patient_age_tier' %} ${patient_age_tier}
     {% else %} ${organization_name}
     {% endif %}
     ;;
@@ -607,7 +475,7 @@ view: analytics {
     label: "BMI"
     description: "Weight in kg / (height in m) ^ 2 "
     type: number
-    sql: ${weight_kg} / power(${height_m},2) ;;
+    sql: ${identifier_observation_bmi.value} ;;
     value_format_name: decimal_1
     html: {{ rendered_value }} BMI ;;
   }
@@ -729,8 +597,8 @@ view: analytics {
     group_label: "Patient Vitals"
     label: "Average BMI"
     description: "Average weight in kg / (height in m) ^ 2 "
-    type: number
-    sql: ${average_weight_kg} / power(${average_height_m},2) ;;
+    type: average
+    sql: ${bmi} ;;
     value_format_name: decimal_1
     html: {{ rendered_value }} BMI ;;
     drill_fields: [drill*]
@@ -743,19 +611,19 @@ view: analytics {
   measure: count_total_patients {
     group_label: "Overall Count"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     drill_fields: [drill*]
   }
   measure: count_total_encounters {
     group_label: "Overall Count"
     type: count_distinct
-    sql: ${encounter_csn} ;;
+    sql: ${encounter.id} ;;
     drill_fields: [drill*]
   }
   measure: count_total_practitioners {
     group_label: "Overall Count"
     type: count_distinct
-    sql: ${practitioner_npi} ;;
+    sql: ${nested_structs.encounter__participant__individual__practitioner_id} ;;
     drill_fields: [drill*]
   }
 
@@ -770,8 +638,7 @@ view: analytics {
     hidden: yes
     type: average
     sql: ${hours_length_of_stay} ;;
-    # filters: [encounter__class.code: "I"]
-    filters: [encounter_contacttype: "3, 106"]
+    filters: [encounter_type: "IMP"]
     drill_fields: [drill*]
   }
 
@@ -782,8 +649,7 @@ view: analytics {
     hidden: yes
     type: average
     sql: ${days_length_of_stay} ;;
-    # filters: [encounter__class.code: "I"]
-    filters: [encounter_contacttype: "3, 106"]
+    filters: [encounter_type: "IMP"]
     drill_fields: [drill*]
   }
 
@@ -794,8 +660,7 @@ view: analytics {
     hidden: yes
     type: average
     sql: ${weeks_length_of_stay} ;;
-    # filters: [encounter__class.code: "I"]
-    filters: [encounter_contacttype: "3, 106"]
+    filters: [encounter_type: "IMP"]
     drill_fields: [drill*]
   }
 
@@ -810,8 +675,7 @@ view: analytics {
     hidden: yes
     type: average
     sql: ${minutes_length_of_stay} ;;
-    # filters: [encounter__class.code: "O"]
-    filters: [encounter_contacttype: "50, 101, 710, 630"]
+    filters: [encounter_type: "AMB"]
     drill_fields: [drill*]
   }
 
@@ -822,8 +686,7 @@ view: analytics {
     hidden: yes
     type: average
     sql: ${hours_length_of_stay} ;;
-    # filters: [encounter__class.code: "O"]
-    filters: [encounter_contacttype: "50, 101, 710, 630"]
+    filters: [encounter_type: "AMB"]
     drill_fields: [drill*]
   }
 
@@ -834,8 +697,7 @@ view: analytics {
     hidden: yes
     type: average
     sql: ${days_length_of_stay} ;;
-    # filters: [encounter__class.code: "O"]
-    filters: [encounter_contacttype: "50, 101, 710, 630"]
+    filters: [encounter_type: "AMB"]
     drill_fields: [drill*]
   }
 
@@ -844,53 +706,38 @@ view: analytics {
 ##################
 
 ## COVID Filter
-  parameter: covid_status_selector {
-    label: "COVID Status"
-    type: unquoted
-    default_value: "all_patients"
-    allowed_value: { label: "All Patients" value: "all_patients" }
-    # allowed_value: { label: "Confirmed or Suspected" value: "confirmed_or_suspected" }
-    allowed_value: { label: "Confirmed" value: "confirmed" }
-    allowed_value: { label: "Suspected" value: "suspected" }
-  }
-#   dimension: covid_filter {
-#     hidden: yes
-#     group_label: "COVID"
-#     label: "COVID Filter"
-#     description: "Set this filter to yes & turn on COVID Status parameter to toggle between COVID status types"
-#     type: yesno
-#     sql:
-#     {%    if covid_status_selector._parameter_value == 'all_patients' %}            1 = 1
-#     {% elsif covid_status_selector._parameter_value == 'confirmed_or_suspected' %}  ${analytics.covid_confirmed_yn_filter} OR ${analytics.covid_suspected_yn_filter}
-#     {% elsif covid_status_selector._parameter_value == 'confirmed' %}               ${analytics.covid_confirmed_yn_filter}
-#     {% elsif covid_status_selector._parameter_value == 'suspected' %}               ${analytics.covid_suspected_yn_filter}
-#     {% else %}                                                                      1 = 1
-#     {% endif %}
-#     ;;
+#   parameter: covid_status_selector {
+#     label: "COVID Status"
+#     type: unquoted
+#     default_value: "all_patients"
+#     allowed_value: { label: "All Patients" value: "all_patients" }
+#     # allowed_value: { label: "Confirmed or Suspected" value: "confirmed_or_suspected" }
+#     allowed_value: { label: "Confirmed" value: "confirmed" }
+#     allowed_value: { label: "Suspected" value: "suspected" }
 #   }
-  dimension: covid_suspected_yn_filter {
-    hidden: yes
-    type: yesno
-    sql: ${condition__code__coding.code} in ${covid_suspected_set} ;;
-  }
-  dimension: covid_confirmed_yn_filter {
-    hidden: yes
-    type: yesno
-    sql: ${condition__code__coding.code} in ${covid_confirmed_set} ;;
-  }
+#   dimension: covid_suspected_yn_filter {
+#     hidden: yes
+#     type: yesno
+#     sql: ${condition__code__coding.code} in ${covid_suspected_set} ;;
+#   }
+#   dimension: covid_confirmed_yn_filter {
+#     hidden: yes
+#     type: yesno
+#     sql: ${condition__code__coding.code} in ${covid_confirmed_set} ;;
+#   }
 
 ## Count Suspected
 
   dimension: covid_suspected_set {
     hidden: yes
     type: string
-    sql: 'Z20.828', 'ZZZZZZ' ;;
+    sql: '82423001, 196416002' ;;
   }
 
   dimension: covid_suspected_yn {
     group_label: "COVID"
     label: "COVID - Suspected"
-    description: "Has a ICD10 condition of Z20.828"
+    # description: "Has a ICD10 condition of Z20.828"
     type: yesno
     sql: ${condition__code__coding.code} in ${covid_suspected_set} ;;
   }
@@ -898,9 +745,9 @@ view: analytics {
   measure: count_covid_suspected {
     group_label: "COVID"
     label: "# COVID Patients (Suspected)"
-    description: "# Patients suspected of having COVID (w/ ICD10 condition of Z20.828)"
+    # description: "# Patients suspected of having COVID (w/ ICD10 condition of Z20.828)"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [covid_suspected_yn: "Yes"]
     drill_fields: [drill*]
   }
@@ -910,13 +757,13 @@ view: analytics {
   dimension: covid_confirmed_set {
     hidden: yes
     type: string
-    sql: 'R68.89', 'U07.1' ;;
+    sql: '53741008', '239873007' ;;
   }
 
   dimension: covid_confirmed_yn {
     group_label: "COVID"
     label: "COVID - Confirmed"
-    description: "Has a ICD10 condition of R68.89 or U07.1"
+    # description: "Has a ICD10 condition of R68.89 or U07.1"
     type: yesno
     sql: ${condition__code__coding.code} in ${covid_confirmed_set} ;;
   }
@@ -924,36 +771,30 @@ view: analytics {
   measure: count_covid_confirmed {
     group_label: "COVID"
     label: "# COVID Patients (Confirmed)"
-    description: "# Patients confirmed w/ COVID (w/ ICD10 condition of R68.89 or U07.1)"
+    # description: "# Patients confirmed w/ COVID (w/ ICD10 condition of R68.89 or U07.1)"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [covid_confirmed_yn: "Yes"]
     drill_fields: [drill*]
   }
 
 ## Count Confirmed or Suspected
 
-  dimension: covid_confirmed_suspected_set {
-    hidden: yes
-    type: string
-    sql: 'R68.89', 'U07.1', 'Z20.828' ;;
-  }
-
   dimension: covid_confirmed_suspected_yn {
     group_label: "COVID"
     label: "COVID - Confirmed or Suspected"
-    description: "Has a ICD10 condition of R68.89 or U07.1 or Z20.828"
+    # description: "Has a ICD10 condition of R68.89 or U07.1 or Z20.828"
     type: yesno
-    sql: ${condition__code__coding.code} in ${covid_confirmed_set} ;;
+    sql: ${condition__code__coding.code} in ${covid_suspected_set} OR ${condition__code__coding.code} in ${covid_confirmed_set} ;;
   }
 
   measure: count_covid_confirmed_suspected {
     group_label: "COVID"
     label: "# COVID Patients (Confirmed or Suspected)"
-    description: "# Patients confirmed w/ COVID (w/ ICD10 condition of R68.89 or U07.1 or Z20.828)"
+    # description: "# Patients confirmed w/ COVID (w/ ICD10 condition of R68.89 or U07.1 or Z20.828)"
     type: count_distinct
-    sql: ${patient_ccf} ;;
-    filters: [covid_confirmed_yn: "Yes"]
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
+    filters: [covid_confirmed_suspected_yn: "Yes"]
     drill_fields: [drill*]
   }
 
@@ -982,21 +823,6 @@ view: analytics {
 ### Encounters
 ##################
 
-## Encounter Type
-
-  dimension: encounter_type {
-    group_label: "Encounter Information"
-    description: "Telehealth (contacttype: 62, 76, 1046) vs. Office Visit (contactype: 50, 101, 710, 630) vs. Inpatient (contactype: 3, 106)"
-    sql:
-        case
-          when ${encounter_contacttype} in ('62', '76', '1046') then 'Telehealth'
-          when ${encounter_contacttype} in ('50', '101', '710', '630') then 'Office Visit'
-          when ${encounter_contacttype} in ('3', '106') then 'Inpatient'
-          else 'Other'
-        end
-    ;;
-  }
-
 ## ED Visits
 
   measure: count_ed_visits {
@@ -1004,38 +830,10 @@ view: analytics {
     hidden: yes
     group_label: "Encounters"
     label: "# Encounters - ED Visits"
-    description: "# Encounters to emergency department (contacttype = 553)"
+    # description: "# Encounters to emergency department (contacttype = 553)"
     type: count_distinct
-    sql: ${encounter_csn} ;;
-    # filters: [encounter__class.code: "E"]
-    filters: [encounter_contacttype: "553"]
-    drill_fields: [drill*]
-  }
-
-## Ambulatory Surgeries
-
-  measure: count_ambulatory_surgery {
-    ## Note: we're shifting away from encounter class code
-    hidden: yes
-    group_label: "Encounters"
-    label: "# Encounters - Ambulatory Surgeries"
-    description: "# Encounters to ambulatory surgery (class.code = A or AMB)"
-    type: count_distinct
-    sql: ${encounter_csn} ;;
-    filters: [encounter__class.code: "A,AMB"]
-    drill_fields: [drill*]
-  }
-
-## Telehealth / virtual health
-
-  # Not possible yet
-  measure: count_telehealth {
-    group_label: "Encounters"
-    label: "# Encounters - Telehealth"
-    description: "# Encounters w/ telehealth (contacttype = 62, 76, 1046)"
-    type: count_distinct
-    sql: ${encounter_csn} ;;
-    filters: [encounter_contacttype: "62, 76, 1046"]
+    sql: ${encounter.id} ;;
+    filters: [encounter_type: "EMER"]
     drill_fields: [drill*]
   }
 
@@ -1044,11 +842,10 @@ view: analytics {
   measure: count_office_visit {
     group_label: "Encounters"
     label: "# Encounters - Office Visits"
-    description: "# Encounters to office visits (contacttype = 50, 101, 710, 630)"
+    # description: "# Encounters to office visits (contacttype = 50, 101, 710, 630)"
     type: count_distinct
-    sql: ${encounter_csn} ;;
-    # filters: [encounter__class.code: "O"]
-    filters: [encounter_contacttype: "50, 101, 710, 630"]
+    sql: ${encounter.id} ;;
+    filters: [encounter_type: "AMB"]
     drill_fields: [drill*]
   }
 
@@ -1057,39 +854,10 @@ view: analytics {
   measure: count_inpatient_visit {
     group_label: "Encounters"
     label: "# Encounters - Inpatient Visits"
-    description: "# Encounters to inpatient visits (class.code = 3, 106)"
+    # description: "# Encounters to inpatient visits (class.code = 3, 106)"
     type: count_distinct
-    sql: ${encounter_csn} ;;
-    # filters: [encounter__class.code: "I"]
-    filters: [encounter_contacttype: "3, 106"]
-    drill_fields: [drill*]
-  }
-
-##################
-### Surge
-##################
-
-## Staffed Bed
-
-  measure: count_staffed_bed_encounters {
-    group_label: "Encounters"
-    label: "# Encounters - Staffed Beds"
-    description: "# Encounters - inpatient visits (class.code = 3, 106) and not ICU bed (location site <> '%ICU%')"
-    type: count_distinct
-    sql: ${encounter_csn} ;;
-    # filters: [encounter__class.code: "I"]
-    filters: [encounter_contacttype: "3, 106", location_si: "-%ICU%"]
-    drill_fields: [drill*]
-  }
-
-  measure: count_icu_bed_encounters {
-    group_label: "Encounters"
-    label: "# Encounters - ICU Beds"
-    description: "# Encounters - inpatient visits (class.code = 3, 106) and ICU bed (location site = '%ICU%')"
-    type: count_distinct
-    sql: ${encounter_csn} ;;
-    # filters: [encounter__class.code: "I"]
-    filters: [encounter_contacttype: "3, 106", location_si: "%ICU%"]
+    sql: ${encounter.id} ;;
+    filters: [encounter_type: "IMP"]
     drill_fields: [drill*]
   }
 
@@ -1097,42 +865,13 @@ view: analytics {
 ### Status - Stage
 ##################
 
-  measure: count_patient_snf {
-    group_label: "Status - Stage"
-    label: "# Patients - Transferred to SNF"
-    description: "# Patients who transferred to SNF (had dischdisposition = 96,97,03)"
-    type: count_distinct
-    sql: ${patient_ccf} ;;
-    filters: [
-      observation__code__coding.code: "DISCHDISPOSITION"
-      , nested_structs.observation__value__string: "96, 97, 03"
-    ]
-    drill_fields: [drill*]
-  }
-
-  measure: count_patient_home_healthcare {
-    group_label: "Status - Stage"
-    label: "# Patients - Transferred to Home Health"
-    description: "# Patients who transferred to Home Health (had dischdisposition = 06)"
-    type: count_distinct
-    sql: ${patient_ccf} ;;
-    filters: [
-      observation__code__coding.code: "DISCHDISPOSITION"
-      , nested_structs.observation__value__string: "06"
-    ]
-    drill_fields: [drill*]
-  }
-
   measure: count_patient_death {
     group_label: "Status - Stage"
     label: "# Patients - Died"
     description: "# Patients who died (had dischdisposition = 20)"
     type: count_distinct
-    sql: ${patient_ccf} ;;
-    filters: [
-      observation__code__coding.code: "DISCHDISPOSITION"
-      , nested_structs.observation__value__string: "20"
-    ]
+    sql: ${encounter.id} ;;
+    filters: [encounter_code: "308646001"]
     drill_fields: [drill*]
   }
 
@@ -1149,14 +888,14 @@ view: analytics {
   dimension: comorbidity_asthma_yn {
     hidden: yes
     type: string
-    sql: 'J44.1', 'J45.901', 'J45.21', 'J45.20', 'J45.40', 'J45.41', 'J45.50', 'J45.51', 'J45,52', 'J45.909' ;;
+    sql: '233678006', '195967001' ;;
 
   }
 
   dimension: comorbidity_asthma {
     group_label: "Comorbidities"
     label: "Comorbidity - Has Asthma"
-    description: "Has Asthma (ICD10 code = J44.1, J45.901, J45.21, J45.20, J45.40, J45.41, J45.50, J45.51, J45,52, J45.909"
+    # description: "Has Asthma (ICD10 code = J44.1, J45.901, J45.21, J45.20, J45.40, J45.41, J45.50, J45.51, J45,52, J45.909"
     type: yesno
     sql: ${condition__code__coding.code} in ${comorbidity_asthma_yn} ;;
     html:
@@ -1170,7 +909,7 @@ view: analytics {
     label: "# Patients w/ Asthma"
     description: "# Patients confirmed w/ Asthma (w/ ICD10 condition of J44.1, J45.901, J45.21, J45.20, J45.40, J45.41, J45.50, J45.51, J45,52, J45.909)"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [comorbidity_asthma: "Yes"]
     drill_fields: [drill*]
   }
@@ -1178,7 +917,7 @@ view: analytics {
   dimension: comorbidity_copd_yn {
     hidden: yes
     type: string
-    sql: 'J44.9', 'J44.1', 'J44.0' ;;
+    sql: '87433001', '162573006' ;;
   }
 
   dimension: comorbidity_copd {
@@ -1198,7 +937,7 @@ view: analytics {
     label: "# Patients w/ COPD"
     description: "# Patients confirmed w/ COPD (w/ ICD10 condition of J44.9, J44.1, J44.0)"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [comorbidity_copd: "Yes"]
     drill_fields: [drill*]
   }
@@ -1206,7 +945,7 @@ view: analytics {
   dimension: comorbidity_hypertension_yn {
     hidden: yes
     type: string
-    sql: 'I10', 'ZZZZZZ' ;;
+    sql: '38341003', '55822004' ;;
   }
 
   dimension: comorbidity_hypertension {
@@ -1226,7 +965,7 @@ view: analytics {
     label: "# Patients w/ Hypertension"
     description: "# Patients confirmed w/ Hypertension (w/ ICD10 condition of I10)"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [comorbidity_hypertension: "Yes"]
     drill_fields: [drill*]
   }
@@ -1235,7 +974,7 @@ view: analytics {
   dimension: comorbidity_diabetes_1_yn {
     hidden: yes
     type: string
-    sql: 'E11.9', 'E10.9' ;;
+    sql: '44054006', '427089005' ;;
   }
 
   dimension: comorbidity_diabetes_1 {
@@ -1255,7 +994,7 @@ view: analytics {
     label: "# Patients w/ Diabetes Type 1"
     description: "# Patients confirmed w/ Diabetes Type 1 (w/ ICD10 condition of E11.9, E10.9)"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [comorbidity_diabetes_1: "Yes"]
     drill_fields: [drill*]
   }
@@ -1263,7 +1002,7 @@ view: analytics {
   dimension: comorbidity_diabetes_2_yn {
     hidden: yes
     type: string
-    sql: 'E11.9', 'ZZZZZZ' ;;
+    sql: '15777000', '368581000119106' ;;
   }
 
   dimension: comorbidity_diabetes_2 {
@@ -1283,7 +1022,7 @@ view: analytics {
     label: "# Patients w/ Diabetes Type 2"
     description: "# Patients confirmed w/ Diabetes Type 2 (w/ ICD10 condition of E11.9)"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [comorbidity_diabetes_2: "Yes"]
     drill_fields: [drill*]
   }
@@ -1291,7 +1030,7 @@ view: analytics {
   dimension: comorbidity_immunocompromised_yn {
     hidden: yes
     type: string
-    sql: 'D89.9', 'ZZZZZZ' ;;
+    sql: '254637007', '424132000' ;;
   }
 
   dimension: comorbidity_immunocompromised {
@@ -1311,7 +1050,7 @@ view: analytics {
     label: "# Patients w/ Immunocompromised"
     description: "# Patients confirmed w/ Immunocompromised (w/ ICD10 condition of D89.9)"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [comorbidity_immunocompromised: "Yes"]
     drill_fields: [drill*]
   }
@@ -1326,37 +1065,37 @@ view: analytics {
 ### Community COVID Results (NYT / Johns Hopkins Data / COVID Block)
 ##################
 
-  measure: confirmed_new {
-    group_label: "Nationwide COVID Results (Johns Hopkins Data)"
-    label: "Confirmed - New Cases"
-    type: number
-    sql: ${covid.confirmed_new} ;;
-    value_format_name: decimal_0
-  }
-
-  measure: confirmed_running_total {
-    group_label: "Nationwide COVID Results (Johns Hopkins Data)"
-    label: "Confirmed - Running Total"
-    type: number
-    sql: ${covid.confirmed_running_total} ;;
-    value_format_name: decimal_0
-  }
-
-  measure: deaths_new {
-    group_label: "Nationwide COVID Results (Johns Hopkins Data)"
-    label: "Deaths - New Cases"
-    type: number
-    sql: ${covid.deaths_new} ;;
-    value_format_name: decimal_0
-  }
-
-  measure: deaths_running_total {
-    group_label: "Nationwide COVID Results (Johns Hopkins Data)"
-    label: "Deatgs - Running Total"
-    type: number
-    sql: ${covid.deaths_running_total} ;;
-    value_format_name: decimal_0
-  }
+#   measure: confirmed_new {
+#     group_label: "Nationwide COVID Results (Johns Hopkins Data)"
+#     label: "Confirmed - New Cases"
+#     type: number
+#     sql: ${covid.confirmed_new} ;;
+#     value_format_name: decimal_0
+#   }
+#
+#   measure: confirmed_running_total {
+#     group_label: "Nationwide COVID Results (Johns Hopkins Data)"
+#     label: "Confirmed - Running Total"
+#     type: number
+#     sql: ${covid.confirmed_running_total} ;;
+#     value_format_name: decimal_0
+#   }
+#
+#   measure: deaths_new {
+#     group_label: "Nationwide COVID Results (Johns Hopkins Data)"
+#     label: "Deaths - New Cases"
+#     type: number
+#     sql: ${covid.deaths_new} ;;
+#     value_format_name: decimal_0
+#   }
+#
+#   measure: deaths_running_total {
+#     group_label: "Nationwide COVID Results (Johns Hopkins Data)"
+#     label: "Deatgs - Running Total"
+#     type: number
+#     sql: ${covid.deaths_running_total} ;;
+#     value_format_name: decimal_0
+#   }
 
 ##################
 ### Census
@@ -1489,7 +1228,7 @@ view: analytics {
     label: "# Patients - Obese"
     description: "BMI > 30"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [vulnerability_is_obese: "Yes"]
     drill_fields: [vulnerability_drill*]
   }
@@ -1497,7 +1236,7 @@ view: analytics {
   measure: patients_is_known_bmi {
     hidden: yes
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [is_known_bmi: "Yes"]
   }
   measure: percent_patients_obese {
@@ -1515,14 +1254,14 @@ view: analytics {
     label: "# Patients - Comorbidity"
     description: "Has Asthma, Diabetes, COPD, or another common comorbidity"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [vulnerability_has_comorbidity: "Yes"]
     drill_fields: [vulnerability_drill*]
   }
   measure: patients_has_any_icd10 {
     hidden: yes
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [comorbidity_exists: "Yes"]
   }
   measure: percent_patients_has_comorbidity {
@@ -1539,7 +1278,7 @@ view: analytics {
     group_label: "Vulnerability Factors"
     label: "# Patients - Over 70"
     type: count_distinct
-    sql: ${patient_ccf} ;;
+    sql: ${nested_structs.encounter__subject__patient_id} ;;
     filters: [is_over_70: "Yes"]
     drill_fields: [vulnerability_drill*]
   }
@@ -1610,22 +1349,22 @@ view: analytics {
 ## Island Hopping  ##
 ###########
 
-view: analytics_island_hopping {
-  extends: [analytics]
-
-  dimension: location_si {
-    sql: ${identifier_location_si_island_hopping.name} ;;
-  }
-  dimension: patient_ccf {
-    sql: ${identifier_patient_ccf_island_hopping.value} ;;
-  }
-  dimension: encounter_csn {
-    sql: ${identifier_encounter_csn_island_hopping.value} ;;
-  }
-  dimension: encounter_contacttype {
-    sql: ${identifier_encounter_contacttype_island_hopping.value} ;;
-  }
-}
+# view: analytics_island_hopping {
+#   extends: [analytics]
+#
+#   dimension: location_si {
+#     sql: ${identifier_location_si_island_hopping.name} ;;
+#   }
+#   dimension: patient_ccf {
+#     sql: ${identifier_patient_ccf_island_hopping.value} ;;
+#   }
+#   dimension: encounter_csn {
+#     sql: ${identifier_encounter_csn_island_hopping.value} ;;
+#   }
+#   dimension: encounter_contacttype {
+#     sql: ${identifier_encounter_contacttype_island_hopping.value} ;;
+#   }
+# }
 
 
 ###########
@@ -1666,6 +1405,14 @@ view: nested_structs {
     sql: cast(${encounter.period}.`end` as timestamp) ;;
   }
 
+  dimension: encounter__class__code {
+    sql: ${encounter.class}.code ;;
+  }
+
+  dimension: encounter__service_provider__organization_id {
+    sql: ${encounter.service_provider}.organizationId ;;
+  }
+
   dimension: encounter__subject__patient_id {
     sql: ${encounter.subject}.patientId ;;
   }
@@ -1702,6 +1449,10 @@ view: nested_structs {
 
 ## Observation
 
+  dimension: observation__context__encounter_id {
+    sql: ${observation.context}.encounterId ;;
+  }
+
   dimension: observation__code__coding {
     sql: ${observation.code}.coding ;;
   }
@@ -1734,6 +1485,26 @@ view: nested_structs {
     sql: ${patient.deceased}.boolean ;;
   }
 
+  dimension: patient__us_core_race__omb_category__value__coding__display {
+    sql: ${patient.us_core_race}.ombCategory.value.coding.display ;;
+  }
+
+  dimension: patient__birth_place__value__address__country {
+    sql: ${patient.birth_place}.value.address.country ;;
+  }
+
+  dimension: patient__communication__language__coding {
+    sql: ${patient__communication.language}.coding ;;
+  }
+
+  dimension: patient__address__geolocation__latitude__value__decimal {
+    sql: ${patient__address.geolocation}.latitude.value.decimal ;;
+  }
+
+  dimension: patient__address__geolocation__longitude__value__decimal {
+    sql: ${patient__address.geolocation}.longitude.value.decimal ;;
+  }
+
 ## Practitioner
 
   dimension: practitioner__identifier__type__coding {
@@ -1741,9 +1512,14 @@ view: nested_structs {
     sql: ${practitioner__identifier.type}.coding ;;
   }
 
-## Location
-  dimension: location__physical_type__coding {
-    sql: ${location.physical_type}.coding ;;
+## Procedure
+
+  dimension: procedure__context__encounter_id {
+    sql: ${procedure.context}.encounterId ;;
+  }
+
+  dimension: procedure__code__coding {
+    sql: ${procedure.code}.coding ;;
   }
 
 ## Organization
@@ -1754,108 +1530,11 @@ view: nested_structs {
 ## Identifer PDTs ##
 ###########
 
-## Option 1: Bind All Filters
-## Test 1 - can CCF be filtered: NO
-## Test 2 - does it respect date filter when always_filter is turned on: YES
-## Test 3 - can it be used for a PDT: NO
-## Conclusion: do not use
-# view: ccf_test_bind_all_filters {derived_table: { explore_source: fhir_hcls { bind_all_filters: yes column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "CCF" }}} dimension: id {} dimension: value {}}
-
-## Option 2: Bind Dates Only
-## Test 1 - can CCF be filtered: YES
-## Test 2 - does it respect date filter when always_filter is turned on: YES
-## Test 3 - can it be used for a PDT: NO
-## Conclusion: use for everything except island hopping
-# view: ccf_test_bind_dates_only {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "CCF" }}} dimension: id {} dimension: value {}}
-
-## Option 3: No filters
-## Test 1 - can CCF be filtered: YES
-## Test 2 - does it respect date filter when always_filter is turned on: NO
-## Test 3 - can it be used for a PDT: YES
-## Conclusion: use only for island hopping and set a filter for last 365 days
-# view: ccf_test_no_filter {derived_table: { explore_source: fhir_hcls { column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "CCF" }}} dimension: id {} dimension: value {}}
-
-## Condition - list of relevant ICD10 codes by patient for last 365 days
-# view: icd10_codes_by_ccf_id { derived_table: { datagroup_trigger: once_daily explore_source: fhir_hcls_pre {column: value { field: patient__identifier.value } column: code { field: condition__code__coding.code } filters: { field: patient__identifier__type__coding.code value: "CCF" } filters: { field: encounter__period.start_date value: "365 days" }}} dimension: value {} dimension: code {}}
-
-
-## Island Hopping
-view: identifier_encounter_csn_island_hopping {derived_table: {explore_source: fhir_hcls { column: id { field: encounter.id } column: value { field: encounter__identifier.value } filters: { field: encounter__identifier__type__coding.code value: "CSN" } filters: { field: analytics.admission_date value: "365 days"}}} dimension: id {} dimension: value {}}
-view: identifier_encounter_contacttype_island_hopping {derived_table: {explore_source: fhir_hcls { column: id { field: encounter.id } column: value { field: encounter__identifier.value } filters: { field: encounter__identifier__type__coding.code value: "CONTACTTYPE" } filters: { field: analytics.admission_date value: "365 days"}}} dimension: id {} dimension: value {}}
-view: identifier_patient_ccf_island_hopping {derived_table: { explore_source: fhir_hcls { column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "CCF" } filters: { field: analytics.admission_date value: "365 days"}}} dimension: id {} dimension: value {}}
-view: identifier_location_si_island_hopping {derived_table: { explore_source: fhir_hcls { column: id { field: encounter.id } column: name { field: location.name } filters: { field: location__physical_type__coding.code value: "si" } filters: { field: analytics.admission_date value: "365 days"}}} dimension: id {} dimension: name {}}
-
-## Encounter
-
-view: identifier_encounter_csn {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: encounter__identifier.value } filters: { field: encounter__identifier__type__coding.code value: "CSN" }}} dimension: id {} dimension: value {}}
-view: identifier_encounter_uci {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: encounter__identifier.value } filters: { field: encounter__identifier__type__coding.code value: "UCI" }}} dimension: id {} dimension: value {}}
-view: identifier_encounter_har {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: encounter__identifier.value } filters: { field: encounter__identifier__type__coding.code value: "HAR" }}} dimension: id {} dimension: value {}}
-view: identifier_encounter_contacttype {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: encounter__identifier.value } filters: { field: encounter__identifier__type__coding.code value: "CONTACTTYPE" }}} dimension: id {} dimension: value {}}
-view: identifier_encounter_bedid {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: encounter__identifier.value } filters: { field: encounter__identifier__type__coding.code value: "BEDID" }}} dimension: id {} dimension: value {}}
-view: identifier_encounter_adtype {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: encounter__identifier.value } filters: { field: encounter__identifier__type__coding.code value: "ADTYPE" }}} dimension: id {} dimension: value {}}
-view: identifier_encounter_chargeslip {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: encounter__identifier.value } filters: { field: encounter__identifier__type__coding.code value: "CHARGESLIP" }}} dimension: id {} dimension: value {}}
-
-## Patient
-
-view: identifier_patient_epi {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "EPI" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_ccf {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "CCF" }}} dimension: id {} dimension: value {}}
-
-view: identifier_patient_memrn {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "MEMRN" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_fla_ccf {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "FLA-CCF" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_sb {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "SB" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_dl {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "DL" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_fvmrn {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "FVMRN" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_irisreg {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "IRISREG" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_cchs_er_hch {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "CCHS-ER" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_cchs_wr_mmh {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "CCHS-WR" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_avmrn {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "AVMRN" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_agmrn {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "AGMRN" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_agldmrn {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "AGLDMRN" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_lumrn {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "LUMRN" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_cpc_agambmr {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "CPC-AGAMBMR" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_cpc_aghs {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "CPC-AGHS" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_cchs_er_sph {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "CCHS-ER" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_mychart {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "MYCHART" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_cpc_rfpi {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "CPC-RFPI" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_selmed_epi {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "SELMED-EPI" }}} dimension: id {} dimension: value {}}
-view: identifier_patient_selmed_fh {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date }  column: id { field: encounter.id } column: value { field: patient__identifier.value } filters: { field: patient__identifier__type__coding.code value: "SELMED-FH" }}} dimension: id {} dimension: value {}}
-
 ## Observation
 
-## code.coding.code
-view: identifier_observation_himprimarycsn {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: nested_structs.observation__value__quantity__value } filters: {field: observation__code__coding.code value: "HIMPRIMARYCSN"}}} dimension: id {} dimension: value {type: number}}
-view: identifier_observation_dischdisposition {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: nested_structs.observation__value__quantity__value } filters: {field: observation__code__coding.code value: "DISCHDISPOSITION"}}} dimension: id {} dimension: value {type: number}}
-view: identifier_observation_apptprocedure {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: nested_structs.observation__value__quantity__value } filters: {field: observation__code__coding.code value: "APPTPROCEDURE"}}} dimension: id {} dimension: value {type: number}}
-
-## value.quantity. unit
-view: identifier_observation_kg {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: nested_structs.observation__value__quantity__value } filters: {field: nested_structs.observation__value__quantity__unit value: "kg"}}} dimension: id {} dimension: value {type: number}}
-view: identifier_observation_cm {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: nested_structs.observation__value__quantity__value } filters: {field: nested_structs.observation__value__quantity__unit value: "cm"}}} dimension: id {} dimension: value {type: number}}
-
-## kg, cm
-
-## Practitioner
-
-view: identifier_practitioner_ccf {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "CCF" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_ser_dr_no {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "SER-DR-NO" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_npi {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "NPI" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_ccfdrno {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "CCFDRNO" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_atndrw {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "ATNDRW" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_medrno {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "MEDRNO" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_lkdrno {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "LKDRNO" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_erfdrno {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "ERFDRNO" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_agambdrno {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "AGAMBDRNO" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_fvludrno {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "FVLUDRNO" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_agobdrno {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "AGOBDRNO" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_acdrno {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "ACDRNO" }}} dimension: id {} dimension: value {}}
-view: identifier_practitioner_mmdrno {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: practitioner__identifier.value } filters: { field: practitioner__identifier__type__coding.code value: "MMDRNO" }}} dimension: id {} dimension: value {}}
-
-## Location
-
-view: identifier_location_lvl {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: name { field: location.name } filters: { field: location__physical_type__coding.code value: "lvl" }}} dimension: id {} dimension: name {}}
-view: identifier_location_bu {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: name { field: location.name } filters: { field: location__physical_type__coding.code value: "bu" }}} dimension: id {} dimension: name {}}
-view: identifier_location_bd {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: name { field: location.name } filters: { field: location__physical_type__coding.code value: "bd" }}} dimension: id {} dimension: name {}}
-view: identifier_location_ro {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: name { field: location.name } filters: { field: location__physical_type__coding.code value: "ro" }}} dimension: id {} dimension: name {}}
-view: identifier_location_si {derived_table: { explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: name { field: location.name } filters: { field: location__physical_type__coding.code value: "si" }}} dimension: id {} dimension: name {}}
+view: identifier_observation_kg {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: nested_structs.observation__value__quantity__value } filters: {field: observation__code__coding.display value: "Body Weight"}}} dimension: id {} dimension: value {type: number}}
+view: identifier_observation_cm {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: nested_structs.observation__value__quantity__value } filters: {field: observation__code__coding.display value: "Body Height"}}} dimension: id {} dimension: value {type: number}}
+view: identifier_observation_bmi {derived_table: {explore_source: fhir_hcls { bind_filters: { from_field: analytics.admission_date to_field: analytics.admission_date } column: id { field: encounter.id } column: value { field: nested_structs.observation__value__quantity__value } filters: {field: observation__code__coding.display value: "Body Mass Index"}}} dimension: id {} dimension: value {type: number}}
 
 ###########
 ## COVID ##

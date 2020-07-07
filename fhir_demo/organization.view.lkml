@@ -5,7 +5,7 @@ view: organization {
   drill_fields: [id]
 
   dimension: id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     primary_key: yes
     type: string
     sql: ${TABLE}.id ;;
@@ -66,7 +66,7 @@ view: organization {
   }
 
   dimension: name {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.name ;;
   }
@@ -410,7 +410,7 @@ view: organization__identifier {
   }
 
   dimension: system {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.system ;;
   }
@@ -428,7 +428,7 @@ view: organization__identifier {
   }
 
   dimension: value {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.value ;;
   }
@@ -635,7 +635,7 @@ view: organization__identifier__type {
 view: organization__address {
   label: "Organization"
   dimension: city {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.city ;;
   }
@@ -666,7 +666,7 @@ view: organization__address {
   }
 
   dimension: postal_code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.postalCode ;;
   }
@@ -1423,7 +1423,7 @@ view: organization__telecom {
   }
 
   dimension: value {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.value ;;
   }

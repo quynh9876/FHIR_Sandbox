@@ -5,7 +5,7 @@ view: practitioner {
   drill_fields: [id]
 
   dimension: id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     primary_key: yes
     type: string
     sql: ${TABLE}.id ;;
@@ -36,7 +36,7 @@ view: practitioner {
   }
 
   dimension: gender {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.gender ;;
   }
@@ -149,7 +149,7 @@ view: practitioner__identifier {
   }
 
   dimension: value {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.value ;;
   }
@@ -356,7 +356,7 @@ view: practitioner__identifier__type {
 view: practitioner__address {
   label: "Practitioner"
   dimension: city {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.city ;;
   }
@@ -387,7 +387,7 @@ view: practitioner__address {
   }
 
   dimension: postal_code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.postalCode ;;
   }
@@ -1188,7 +1188,7 @@ view: practitioner__meta__tag {
 view: practitioner__name {
   label: "Practitioner"
   dimension: family {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.family ;;
   }
@@ -1233,9 +1233,9 @@ view: practitioner__name {
   }
 }
 view: practitioner__name__given {
-  label: "Patient"
+  label: "Practitioner"
   dimension: practitioner__name__given {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${practitioner__name__given.SQL_TABLE_NAME} ;;
   }

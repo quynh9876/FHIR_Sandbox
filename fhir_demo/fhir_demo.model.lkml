@@ -9,199 +9,99 @@ label: "FHIR Block (HCLS)"
 
 #### CCF Model ####
 
-# explore: fhir_hcls_test {
-#   label: "*FHIR (HCLS) Test"
-#   hidden: no
-#   extends: [encounter]
-#   from: encounter
-#   view_name: encounter
-# #   join: condition {
-# #     relationship: many_to_one
-# #     sql_on: ${nested_structs.encounter__diagnosis__condition__condition_id} = ${condition.id} ;;
-# #   }
-# #   join: location {
-# #     relationship: many_to_one
-# #     sql_on: ${nested_structs.encounter__location__location__location_id} = ${location.id} ;;
-# #   }
-# #   join: patient {
-# #     relationship: many_to_one
-# #     sql_on: ${nested_structs.encounter__subject__patient_id} = ${patient.id} ;;
-# #   }
-# #   join: observation {
-# #     relationship: many_to_one
-# #     sql_on: ${nested_structs.encounter__subject__patient_id} = ${observation.subject__patient_id} ;;
-# #   }
-# #   join: organization {
-# #     relationship: many_to_one
-# #     sql_on: ${patient__general_practitioner.organization_id} = ${organization.id} ;;
-# #   }
-# #   join: practitioner {
-# #     relationship: many_to_one
-# #     sql_on: ${nested_structs.encounter__participant__individual__practitioner_id} = ${practitioner.id}  ;;
-# #   }
-# }
-
-# explore: fhir_hcls_simple {
-#   extends: [fhir_hcls]
-#   label: "*FHIR (HCLS - Simple)"
-#   fields: [
-#       analytics.admission_date
-#     , analytics.admission_week
-#     , analytics.admission_month
-#     , analytics.patient_age
-#     , analytics.patient_age_tier
-#     , analytics.patient_gender
-#     , analytics.patient_postal_code
-#     , analytics.patient_state
-#     , analytics.organization_name
-#     , analytics.bmi
-#     , analytics.bmi_weight_tier
-#     , analytics.count_total_patients
-#     , analytics.count_total_encounters
-#     , analytics.covid_status
-#     , analytics.encounter_type
-#   ]
-# }
+explore: fhir_hcls_simple {
+  extends: [fhir_hcls]
+  label: "*FHIR (HCLS - Simple)"
+  fields: [
+      analytics.admission_date
+    , analytics.admission_week
+    , analytics.admission_month
+    , analytics.patient_age
+    , analytics.patient_age_tier
+    , analytics.patient_gender
+    , analytics.patient_postal_code
+    , analytics.patient_state
+    , analytics.organization_name
+    , analytics.bmi
+    , analytics.bmi_weight_tier
+    , analytics.count_total_patients
+    , analytics.count_total_encounters
+    , analytics.covid_status
+    , analytics.encounter_type
+  ]
+}
 explore: fhir_hcls {
   label: "*FHIR (HCLS)"
   hidden: no
-  extends: [encounter,patient,observation,condition,organization,practitioner,location]
+  extends: [encounter,patient,observation,condition,organization,practitioner,procedure]
   from: encounter
   view_name: encounter
 
-  sql_always_where:
-    length(${encounter.id}) > 15
-    AND
-    {%    if analytics.covid_status_selector._parameter_value == 'all_patients' %}            1 = 1
-    {% elsif analytics.covid_status_selector._parameter_value == 'confirmed' %}               ${analytics.covid_confirmed_yn_filter}
-    {% elsif analytics.covid_status_selector._parameter_value == 'suspected' %}               ${analytics.covid_suspected_yn_filter}
-    {% else %}                                                                                1 = 1
-    {% endif %}
-    ;;
-    # {% elsif analytics.covid_status_selector._parameter_value == 'confirmed_or_suspected' %}  ${analytics.covid_confirmed_yn_filter} OR ${analytics.covid_suspected_yn_filter}
-
-    always_filter: {
-      filters: [analytics.admission_date: "7 days"]
-    }
+  always_filter: {
+    filters: [analytics.admission_date: "7 days"]
+  }
 
 ### Nested Structs
 
   join: nested_structs { relationship: one_to_one sql:  ;; }
-  join: encounter__identifier__type__coding { relationship: many_to_one sql: LEFT JOIN UNNEST(${nested_structs.encounter__identifier__type__coding}) as encounter__identifier__type__coding ;; }
-  join: condition__code__coding { relationship: many_to_one sql: LEFT JOIN UNNEST(${nested_structs.condition__code__coding}) as condition__code__coding ;; }
-  join: location__physical_type__coding { relationship: many_to_one sql: LEFT JOIN UNNEST(${nested_structs.location__physical_type__coding}) as location__physical_type__coding ;; }
-  join: observation__code__coding { relationship: many_to_one sql: LEFT JOIN UNNEST(${nested_structs.observation__code__coding}) as observation__code__coding ;; }
-  join: patient__identifier__type__coding { relationship: many_to_one sql: LEFT JOIN UNNEST(${nested_structs.patient__identifier__type__coding}) as patient__identifier__type__coding ;; }
-  join: patient__marital_status__coding { relationship: many_to_one sql: LEFT JOIN UNNEST(${nested_structs.patient__marital_status__coding}) as patient__marital_status__coding ;; }
-  join: practitioner__identifier__type__coding { relationship: many_to_one sql: LEFT JOIN UNNEST(${nested_structs.practitioner__identifier__type__coding}) as practitioner__identifier__type__coding ;; }
+  join: encounter__identifier__type__coding { relationship: one_to_many sql: LEFT JOIN UNNEST(${nested_structs.encounter__identifier__type__coding}) as encounter__identifier__type__coding ;; }
+  join: condition__code__coding { relationship: one_to_many sql: LEFT JOIN UNNEST(${nested_structs.condition__code__coding}) as condition__code__coding ;; }
+  join: observation__code__coding { relationship: one_to_many sql: LEFT JOIN UNNEST(${nested_structs.observation__code__coding}) as observation__code__coding ;; }
+  join: patient__identifier__type__coding { relationship: one_to_many sql: LEFT JOIN UNNEST(${nested_structs.patient__identifier__type__coding}) as patient__identifier__type__coding ;; }
+  join: patient__marital_status__coding { relationship: one_to_many sql: LEFT JOIN UNNEST(${nested_structs.patient__marital_status__coding}) as patient__marital_status__coding ;; }
+  join: patient__communication__language__coding { relationship: one_to_many sql: LEFT JOIN UNNEST(${nested_structs.patient__communication__language__coding}) as patient__communication__language__coding ;; }
+  join: practitioner__identifier__type__coding { relationship: one_to_many sql: LEFT JOIN UNNEST(${nested_structs.practitioner__identifier__type__coding}) as practitioner__identifier__type__coding ;; }
+  join: procedure__code__coding { relationship: one_to_many sql: LEFT JOIN UNNEST(${nested_structs.procedure__code__coding}) as procedure__code__coding ;; }
 
 ### Main Joins
 
   join: condition {
-    relationship: many_to_one
-    sql_on: ${nested_structs.encounter__diagnosis__condition__condition_id} = ${condition.id} ;;
-  }
-  join: location {
-    relationship: many_to_one
-    sql_on: ${nested_structs.encounter__location__location__location_id} = ${location.id} ;;
+    relationship: one_to_many
+    sql_on: ${encounter.id} = ${nested_structs.condition__context__encounter_id} ;;
   }
   join: patient {
     relationship: many_to_one
     sql_on: ${nested_structs.encounter__subject__patient_id} = ${patient.id} ;;
   }
   join: observation {
-    relationship: many_to_one
-    sql_on: ${nested_structs.encounter__subject__patient_id} = ${observation.subject__patient_id} ;;
+    relationship: one_to_many
+    sql_on: ${encounter.id} = ${nested_structs.observation__context__encounter_id} ;;
   }
   join: organization {
     relationship: many_to_one
-    sql_on: ${patient__general_practitioner.organization_id} = ${organization.id} ;;
+    sql_on: ${nested_structs.encounter__service_provider__organization_id} = ${organization.id} ;;
   }
   join: practitioner {
     relationship: many_to_one
     sql_on: ${nested_structs.encounter__participant__individual__practitioner_id} = ${practitioner.id}  ;;
   }
+  join: procedure {
+    relationship: one_to_many
+    sql_on: ${encounter.id} = ${nested_structs.procedure__context__encounter_id} ;;
+  }
 
 ### Identifier Joins
 
-  join: identifier_encounter_csn_island_hopping { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_encounter_csn_island_hopping.id} ;; }
-  join: identifier_encounter_contacttype_island_hopping { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_encounter_contacttype_island_hopping.id} ;; }
-  join: identifier_patient_ccf_island_hopping { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_ccf_island_hopping.id} ;; }
-  join: identifier_location_si_island_hopping { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_location_si_island_hopping.id} ;; }
-
-  join: identifier_encounter_csn {fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_encounter_csn.id};;}
-  join: identifier_encounter_uci {fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_encounter_uci.id};;}
-  join: identifier_encounter_har {fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_encounter_har.id};;}
-  join: identifier_encounter_contacttype {fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_encounter_contacttype.id};;}
-  join: identifier_encounter_bedid {fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_encounter_bedid.id};;}
-  join: identifier_encounter_adtype {fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_encounter_adtype.id};;}
-  join: identifier_encounter_chargeslip {fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_encounter_chargeslip.id};;}
-
-  join: identifier_patient_epi { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_epi.id};; }
-  join: identifier_patient_ccf { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_ccf.id};; }
-
-  join: identifier_patient_memrn { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_memrn.id};; }
-  join: identifier_patient_fla_ccf { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_fla_ccf.id};; }
-  join: identifier_patient_sb { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_sb.id};; }
-  join: identifier_patient_dl { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_dl.id};; }
-  join: identifier_patient_fvmrn { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_fvmrn.id};; }
-  join: identifier_patient_irisreg { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_irisreg.id};; }
-  join: identifier_patient_cchs_er_hch { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_cchs_er_hch.id};; }
-  join: identifier_patient_cchs_wr_mmh { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_cchs_wr_mmh.id};; }
-  join: identifier_patient_avmrn { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_avmrn.id};; }
-  join: identifier_patient_agmrn { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_agmrn.id};; }
-  join: identifier_patient_agldmrn { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_agldmrn.id};; }
-  join: identifier_patient_lumrn { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_lumrn.id};; }
-  join: identifier_patient_cpc_agambmr { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_cpc_agambmr.id};; }
-  join: identifier_patient_cpc_aghs { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_cpc_aghs.id};; }
-  join: identifier_patient_cchs_er_sph { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_cchs_er_sph.id};; }
-  join: identifier_patient_mychart { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_mychart.id};; }
-  join: identifier_patient_cpc_rfpi { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_cpc_rfpi.id};; }
-  join: identifier_patient_selmed_epi { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_selmed_epi.id};; }
-  join: identifier_patient_selmed_fh { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_patient_selmed_fh.id};; }
-
-  join: identifier_observation_himprimarycsn { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_observation_himprimarycsn.id};;}
-  join: identifier_observation_dischdisposition { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_observation_dischdisposition.id};;}
-  join: identifier_observation_apptprocedure { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_observation_apptprocedure.id};;}
   join: identifier_observation_kg { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_observation_kg.id};;}
   join: identifier_observation_cm { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_observation_cm.id};;}
-
-  join: identifier_practitioner_ccf { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_ccf.id} ;;}
-  join: identifier_practitioner_ser_dr_no { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_ser_dr_no.id} ;;}
-  join: identifier_practitioner_npi { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_npi.id} ;;}
-  join: identifier_practitioner_ccfdrno { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_ccfdrno.id} ;;}
-  join: identifier_practitioner_atndrw { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_atndrw.id} ;;}
-  join: identifier_practitioner_medrno { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_medrno.id} ;;}
-  join: identifier_practitioner_lkdrno { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_lkdrno.id} ;;}
-  join: identifier_practitioner_erfdrno { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_erfdrno.id} ;;}
-  join: identifier_practitioner_agambdrno { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_agambdrno.id} ;;}
-  join: identifier_practitioner_fvludrno { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_fvludrno.id} ;;}
-  join: identifier_practitioner_agobdrno { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_agobdrno.id} ;;}
-  join: identifier_practitioner_acdrno { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_acdrno.id} ;;}
-  join: identifier_practitioner_mmdrno { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_practitioner_mmdrno.id} ;;}
-
-  join: identifier_location_lvl { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_location_lvl.id} ;; }
-  join: identifier_location_bu { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_location_bu.id} ;; }
-  join: identifier_location_bd { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_location_bd.id} ;; }
-  join: identifier_location_ro { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_location_ro.id} ;; }
-  join: identifier_location_si { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_location_si.id} ;; }
+  join: identifier_observation_bmi { fields: [] relationship: one_to_one sql_on: ${encounter.id} = ${identifier_observation_bmi.id};;}
 
 ### Join to analytics view
 
   join: analytics { relationship: one_to_one sql:  ;; }
-  join: analytics_island_hopping { view_label: "Z - Island Hopping Build" relationship: one_to_one sql:  ;; }
-  join: encounter_cross_join { relationship: one_to_one sql:  ;; }
+  # join: analytics_island_hopping { view_label: "Z - Island Hopping Build" relationship: one_to_one sql:  ;; }
+  # join: encounter_cross_join { relationship: one_to_one sql:  ;; }
 
 ### Join to COVID & census data
 
-join: covid {
-  view_label: "Outside Data - COVID (Johns Hopkins)"
-  relationship: many_to_one
-  sql_on:
-                ${nested_structs.encounter__period__start_raw} = ${covid.measurement_raw}
-                ${patient__address.postal_code} = cast(${covid.zip} as string)
-            ;;
-}
+# join: covid {
+#   view_label: "Outside Data - COVID (Johns Hopkins)"
+#   relationship: many_to_one
+#   sql_on:
+#                 ${nested_structs.encounter__period__start_raw} = ${covid.measurement_raw}
+#                 ${patient__address.postal_code} = cast(${covid.zip} as string)
+#             ;;
+# }
 
 join: acs_zip_codes_2017_5yr {
   view_label: "Outside Data - Census (ACS)"
@@ -217,39 +117,40 @@ join: national_averages {
 
 }
 explore: acs_zip_codes_2017_5yr { hidden: yes }
-##Island Hopping
-explore: patient_status {
-  from: patient_status_covid
-  join: patient_status_location {
-    view_label: "Patient Status"
-    type: left_outer
-    relationship: one_to_one
-    sql_on: ${patient_status.patient_id} = ${patient_status_location.patient_id}
-      AND ${patient_status.snapshot_date} = ${patient_status_location.snapshot_date};;
-  }
 
-  join: patient_status_bed {
-    view_label: "Patient Status"
-    type: left_outer
-    relationship: one_to_one
-    sql_on: ${patient_status.patient_id} = ${patient_status_bed.patient_id}
-      AND ${patient_status.snapshot_date} = ${patient_status_bed.snapshot_date};;
-  }
-}
-explore: final_patient_status{ hidden: yes }
-explore: final_patient_status_patient_details{ hidden: yes }
-
-explore: final_patient_status_dashboard {
-  sql_always_where: ${days_since_first_event} IS NOT NULL ;;
-  label: "*FHIR (HCLS) - Status-Based"
-
-  join: final_patient_status_patient_details_dashboard {
-    view_label: "Patient Details"
-    relationship: many_to_one
-    sql_on: ${final_patient_status_dashboard.ccf_identifier} = ${final_patient_status_patient_details_dashboard.patient_ccf} ;;
-  }
-}
-
+# ##Island Hopping
+# explore: patient_status {
+#   from: patient_status_covid
+#   join: patient_status_location {
+#     view_label: "Patient Status"
+#     type: left_outer
+#     relationship: one_to_one
+#     sql_on: ${patient_status.patient_id} = ${patient_status_location.patient_id}
+#       AND ${patient_status.snapshot_date} = ${patient_status_location.snapshot_date};;
+#   }
+#
+#   join: patient_status_bed {
+#     view_label: "Patient Status"
+#     type: left_outer
+#     relationship: one_to_one
+#     sql_on: ${patient_status.patient_id} = ${patient_status_bed.patient_id}
+#       AND ${patient_status.snapshot_date} = ${patient_status_bed.snapshot_date};;
+#   }
+# }
+# explore: final_patient_status{ hidden: yes }
+# explore: final_patient_status_patient_details{ hidden: yes }
+#
+# explore: final_patient_status_dashboard {
+#   sql_always_where: ${days_since_first_event} IS NOT NULL ;;
+#   label: "*FHIR (HCLS) - Status-Based"
+#
+#   join: final_patient_status_patient_details_dashboard {
+#     view_label: "Patient Details"
+#     relationship: many_to_one
+#     sql_on: ${final_patient_status_dashboard.ccf_identifier} = ${final_patient_status_patient_details_dashboard.patient_ccf} ;;
+#   }
+# }
+#
 
 
 

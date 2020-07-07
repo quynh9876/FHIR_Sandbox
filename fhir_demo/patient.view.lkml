@@ -5,7 +5,7 @@ view: patient {
   drill_fields: [id]
 
   dimension: id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     primary_key: yes
     type: string
     sql: ${TABLE}.id ;;
@@ -41,7 +41,7 @@ view: patient {
       quarter,
       year
     ]
-    sql: ${TABLE}.birthDate ;;
+    sql: cast(${TABLE}.birthDate as timestamp) ;;
   }
 
   dimension: age {
@@ -87,7 +87,7 @@ view: patient {
   }
 
   dimension: gender {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.gender ;;
   }
@@ -246,7 +246,7 @@ view: patient__deceased {
   }
 
   dimension: date_time {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.dateTime ;;
   }
@@ -273,13 +273,13 @@ view: patient__us_core_race__text__value {
 view: patient__us_core_race__omb_category__value__coding {
   label: "Patient"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
@@ -594,7 +594,7 @@ view: patient__link {
 view: patient__disability_adjusted_life_years__value {
   label: "Patient"
   dimension: decimal {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: number
     sql: ${TABLE}.decimal ;;
   }
@@ -603,7 +603,7 @@ view: patient__disability_adjusted_life_years__value {
 view: patient__shr_entity_person_extension__value__reference {
   label: "Patient"
   dimension: basic_id {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.basicId ;;
   }
@@ -612,20 +612,20 @@ view: patient__shr_entity_person_extension__value__reference {
 view: patient__birth_place__value__address {
   label: "Patient"
   dimension: city {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.city ;;
   }
 
   dimension: country {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     map_layer_name: countries
     sql: ${TABLE}.country ;;
   }
 
   dimension: state {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.state ;;
   }
@@ -1532,7 +1532,7 @@ view: patient__telecom {
   }
 
   dimension: value {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.value ;;
   }
@@ -1541,7 +1541,7 @@ view: patient__telecom {
 view: patient__text {
   label: "Patient"
   dimension: div {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.div ;;
   }
@@ -1556,19 +1556,19 @@ view: patient__text {
 view: patient__communication__language__coding {
   label: "Patient"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
 
   dimension: system {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.system ;;
   }
@@ -1595,7 +1595,7 @@ view: patient__communication__language {
   }
 
   dimension: text {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.text ;;
   }
@@ -1676,7 +1676,7 @@ view: patient__identifier {
   }
 
   dimension: system {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.system ;;
   }
@@ -1694,7 +1694,7 @@ view: patient__identifier {
   }
 
   dimension: value {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.value ;;
   }
@@ -1853,19 +1853,19 @@ view: patient__identifier__assigner__identifier__type {
 view: patient__identifier__type__coding {
   label: "Patient"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
 
   dimension: system {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.system ;;
   }
@@ -1892,7 +1892,7 @@ view: patient__identifier__type {
   }
 
   dimension: text {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.text ;;
   }
@@ -1901,7 +1901,7 @@ view: patient__identifier__type {
 view: patient__address {
   label: "Patient"
   dimension: city {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.city ;;
   }
@@ -1939,7 +1939,7 @@ view: patient__address {
   }
 
   dimension: postal_code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.postalCode ;;
   }
@@ -1996,7 +1996,7 @@ view: patient__address__period {
 view: patient__address__geolocation__latitude__value {
   label: "Patient"
   dimension: decimal {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: number
     sql: ${TABLE}.decimal ;;
   }
@@ -2005,7 +2005,7 @@ view: patient__address__geolocation__latitude__value {
 view: patient__address__geolocation__longitude__value {
   label: "Patient"
   dimension: decimal {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: number
     sql: ${TABLE}.decimal ;;
   }
@@ -2074,7 +2074,7 @@ view: patient__photo {
 view: patient__shr_entity_fathers_name_extension__value__human_name {
   label: "Patient"
   dimension: text {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.text ;;
   }
@@ -2083,7 +2083,7 @@ view: patient__shr_entity_fathers_name_extension__value__human_name {
 view: patient__us_core_birthsex__value {
   label: "Patient"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
@@ -2098,7 +2098,7 @@ view: patient__multiple_birth {
   }
 
   dimension: integer {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: number
     sql: ${TABLE}.integer ;;
   }
@@ -2494,7 +2494,7 @@ view: patient__meta__tag {
 view: patient__name {
   label: "Patient"
   dimension: family {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.family ;;
   }
@@ -2533,7 +2533,7 @@ view: patient__name {
   }
 
   dimension: use {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.use ;;
   }
@@ -2542,7 +2542,7 @@ view: patient__name {
 view: patient__name__given {
   label: "Patient"
   dimension: patient__name__given {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${patient__name__given.SQL_TABLE_NAME} ;;
   }
@@ -2710,7 +2710,7 @@ view: patient__animal__gender_status {
 view: patient__patient_mothers_maiden_name__value {
   label: "Patient"
   dimension: string {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.string ;;
   }
@@ -2719,13 +2719,13 @@ view: patient__patient_mothers_maiden_name__value {
 view: patient__marital_status__coding {
   label: "Patient"
   dimension: code {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.code ;;
   }
 
   dimension: display {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.display ;;
   }
@@ -2758,7 +2758,7 @@ view: patient__marital_status {
   }
 
   dimension: text {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: string
     sql: ${TABLE}.text ;;
   }
@@ -2767,7 +2767,7 @@ view: patient__marital_status {
 view: patient__quality_adjusted_life_years__value {
   label: "Patient"
   dimension: decimal {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     type: number
     sql: ${TABLE}.decimal ;;
   }
@@ -2785,7 +2785,7 @@ view: patient__shr_actor_fictional_person_extension {
 view: patient__us_core_race__text {
   label: "Patient"
   dimension: value {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     hidden: yes
     sql: ${TABLE}.value ;;
   }
@@ -2848,7 +2848,7 @@ view: patient__us_core_ethnicity__omb_category__value {
 view: patient__address__geolocation__latitude {
   label: "Patient"
   dimension: value {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     hidden: yes
     sql: ${TABLE}.value ;;
   }
@@ -2857,7 +2857,7 @@ view: patient__address__geolocation__latitude {
 view: patient__address__geolocation__longitude {
   label: "Patient"
   dimension: value {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     hidden: yes
     sql: ${TABLE}.value ;;
   }
@@ -2866,7 +2866,7 @@ view: patient__address__geolocation__longitude {
 view: patient__shr_demographics_social_security_number_extension {
   label: "Patient"
   dimension: value {
-    group_label: "{{ _view._name }}"
+    group_label: "*Populated | {{ _view._name }}"
     hidden: yes
     sql: ${TABLE}.value ;;
   }
