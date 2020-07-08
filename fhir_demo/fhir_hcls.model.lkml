@@ -136,7 +136,7 @@ explore: patient_status {
   }
 }
 explore: final_patient_status{ hidden: yes }
-explore: final_patient_status_patient_detail{ hidden: yes }
+explore: final_patient_status_patient_details{ hidden: yes }
 
 explore: final_patient_status_dashboard {
   sql_always_where: ${days_since_first_event} IS NOT NULL ;;

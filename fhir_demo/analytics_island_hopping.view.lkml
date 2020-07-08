@@ -826,7 +826,7 @@ view: final_patient_status {
   dimension: patient_id {}
 }
 
-view: final_patient_status_patient_detail {
+view: final_patient_status_patient_details {
   derived_table: {
     publish_as_db_view: yes
     datagroup_trigger: once_daily
