@@ -150,7 +150,7 @@ view: analytics {
       }
     }
     action: {
-      label: "Create Ticket"
+      label: "Create Telehealth Ticket"
       url: "https://desolate-refuge-53336.herokuapp.com/posts"
       icon_url: "https://www.google.com/s2/favicons?domain_url=http://www.servicenow.com"
       param: {
@@ -830,7 +830,7 @@ view: analytics {
   dimension: covid_suspected_set {
     hidden: yes
     type: string
-    sql: '82423001', '196416002' ;;
+    sql: '82423001', '196416002, 10509002,  233604007' ;;
   }
 
   dimension: covid_suspected_yn {
@@ -856,7 +856,7 @@ view: analytics {
   dimension: covid_confirmed_set {
     hidden: yes
     type: string
-    sql: '53741008', '239873007' ;;
+    sql: '53741008', '239873007, 428251008, 124171000119105' ;;
   }
 
   dimension: covid_confirmed_yn {
@@ -968,7 +968,7 @@ view: analytics {
     # description: "# Patients who died (had dischdisposition = 20)"
     type: count_distinct
     sql: ${encounter.id} ;;
-    filters: [encounter_code: "308646001"]
+    filters: [encounter_code: "308646001, 185347001"]
     drill_fields: [drill*]
   }
 
@@ -988,7 +988,7 @@ view: analytics {
     # description: "# Patients who died (had dischdisposition = 20)"
     type: count_distinct
     sql: ${encounter.id} ;;
-    filters: [encounter_code: "183495009"]
+    filters: [encounter_code: "183495009, 183452005, 185347001"]
     drill_fields: [drill*]
   }
 
