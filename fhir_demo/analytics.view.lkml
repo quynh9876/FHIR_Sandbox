@@ -391,7 +391,7 @@ view: analytics {
 
   dimension: encounter_reason_for_visit {
     group_label: "Encounter Information"
-    label: "Encounter Reaspm for Visit"
+    label: "Encounter Type Detail"
     description: "Name for SNOMED-CT reason for visit code for visit"
     sql: ${encounter__type__coding.display};;
     type: string
@@ -965,12 +965,55 @@ view: analytics {
   measure: count_patient_death {
     group_label: "Status - Stage"
     label: "# Patients - Died"
-    description: "# Patients who died (had dischdisposition = 20)"
+    # description: "# Patients who died (had dischdisposition = 20)"
     type: count_distinct
     sql: ${encounter.id} ;;
     filters: [encounter_code: "308646001"]
     drill_fields: [drill*]
   }
+
+  measure: count_patient_home_healthcare {
+    group_label: "Status - Stage"
+    label: "# Patients - Home Healthcare"
+    # description: "# Patients who died (had dischdisposition = 20)"
+    type: count_distinct
+    sql: ${encounter.id} ;;
+    filters: [encounter_code: "308540004, 305408004"]
+    drill_fields: [drill*]
+  }
+
+  measure: count_patient_snf {
+    group_label: "Status - Stage"
+    label: "# Patients - SNF"
+    # description: "# Patients who died (had dischdisposition = 20)"
+    type: count_distinct
+    sql: ${encounter.id} ;;
+    filters: [encounter_code: "183495009"]
+    drill_fields: [drill*]
+  }
+
+  measure: count_staffed_bed_encounters {
+    group_label: "Status - Stage"
+    label: "# Patients - Staffed Bed"
+    # description: "# Patients who died (had dischdisposition = 20)"
+    type: count_distinct
+    sql: ${encounter.id} ;;
+    filters: [encounter_code: "-56876005"]
+    drill_fields: [drill*]
+  }
+
+  measure: count_icu_bed_encounters {
+    group_label: "Status - Stage"
+    label: "# Patients - ICU Bed"
+    # description: "# Patients who died (had dischdisposition = 20)"
+    type: count_distinct
+    sql: ${encounter.id} ;;
+    filters: [encounter_code: "56876005"]
+    drill_fields: [drill*]
+  }
+
+
+
 
 ##################
 ### Comorbidities
@@ -1443,28 +1486,6 @@ view: analytics {
   }
 
 }
-
-###########
-## Island Hopping  ##
-###########
-
-# view: analytics_island_hopping {
-#   extends: [analytics]
-#
-#   dimension: location_si {
-#     sql: ${identifier_location_si_island_hopping.name} ;;
-#   }
-#   dimension: patient_ccf {
-#     sql: ${identifier_patient_ccf_island_hopping.value} ;;
-#   }
-#   dimension: encounter_csn {
-#     sql: ${identifier_encounter_csn_island_hopping.value} ;;
-#   }
-#   dimension: encounter_contacttype {
-#     sql: ${identifier_encounter_contacttype_island_hopping.value} ;;
-#   }
-# }
-
 
 ###########
 ## Fixing nested structs ##

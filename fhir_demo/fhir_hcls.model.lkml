@@ -89,8 +89,6 @@ explore: fhir_hcls {
 ### Join to analytics view
 
   join: analytics { relationship: one_to_one sql:  ;; }
-  # join: analytics_island_hopping { view_label: "Z - Island Hopping Build" relationship: one_to_one sql:  ;; }
-  # join: encounter_cross_join { relationship: one_to_one sql:  ;; }
 
 ### Join to COVID & census data
 
@@ -118,39 +116,39 @@ join: national_averages {
 }
 explore: acs_zip_codes_2017_5yr { hidden: yes }
 
-# ##Island Hopping
-# explore: patient_status {
-#   from: patient_status_covid
-#   join: patient_status_location {
-#     view_label: "Patient Status"
-#     type: left_outer
-#     relationship: one_to_one
-#     sql_on: ${patient_status.patient_id} = ${patient_status_location.patient_id}
-#       AND ${patient_status.snapshot_date} = ${patient_status_location.snapshot_date};;
-#   }
-#
-#   join: patient_status_bed {
-#     view_label: "Patient Status"
-#     type: left_outer
-#     relationship: one_to_one
-#     sql_on: ${patient_status.patient_id} = ${patient_status_bed.patient_id}
-#       AND ${patient_status.snapshot_date} = ${patient_status_bed.snapshot_date};;
-#   }
-# }
-# explore: final_patient_status{ hidden: yes }
-# explore: final_patient_status_patient_details{ hidden: yes }
-#
-# explore: final_patient_status_dashboard {
-#   sql_always_where: ${days_since_first_event} IS NOT NULL ;;
-#   label: "*FHIR (HCLS) - Status-Based"
-#
-#   join: final_patient_status_patient_details_dashboard {
-#     view_label: "Patient Details"
-#     relationship: many_to_one
-#     sql_on: ${final_patient_status_dashboard.ccf_identifier} = ${final_patient_status_patient_details_dashboard.patient_ccf} ;;
-#   }
-# }
-#
+##Island Hopping
+explore: patient_status {
+  from: patient_status_covid
+  join: patient_status_location {
+    view_label: "Patient Status"
+    type: left_outer
+    relationship: one_to_one
+    sql_on: ${patient_status.patient_id} = ${patient_status_location.patient_id}
+      AND ${patient_status.snapshot_date} = ${patient_status_location.snapshot_date};;
+  }
+
+  join: patient_status_bed {
+    view_label: "Patient Status"
+    type: left_outer
+    relationship: one_to_one
+    sql_on: ${patient_status.patient_id} = ${patient_status_bed.patient_id}
+      AND ${patient_status.snapshot_date} = ${patient_status_bed.snapshot_date};;
+  }
+}
+explore: final_patient_status{ hidden: yes }
+explore: final_patient_status_patient_details{ hidden: yes }
+
+explore: final_patient_status_dashboard {
+  sql_always_where: ${days_since_first_event} IS NOT NULL ;;
+  label: "*FHIR (HCLS) - Status-Based"
+
+  join: final_patient_status_patient_details_dashboard {
+    view_label: "Patient Details"
+    relationship: many_to_one
+    sql_on: ${final_patient_status_dashboard.patient_id} = ${final_patient_status_patient_details_dashboard.patient_id} ;;
+  }
+}
+
 
 
 
