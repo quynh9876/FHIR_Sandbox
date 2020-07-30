@@ -830,7 +830,7 @@ view: analytics {
   dimension: covid_suspected_set {
     hidden: yes
     type: string
-    sql: '82423001', '196416002, 10509002,  233604007' ;;
+    sql: '82423001', '196416002', '10509002', '233604007', '444814009', '195662009', '43878008', '162864005' ;;
   }
 
   dimension: covid_suspected_yn {
@@ -856,7 +856,7 @@ view: analytics {
   dimension: covid_confirmed_set {
     hidden: yes
     type: string
-    sql: '53741008', '239873007, 428251008, 124171000119105' ;;
+    sql: '53741008', '239873007', '428251008', '124171000119105', '72892002', '44465007', '65363002' ;;
   }
 
   dimension: covid_confirmed_yn {
