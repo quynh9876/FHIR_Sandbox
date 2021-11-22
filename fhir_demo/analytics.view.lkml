@@ -199,6 +199,11 @@ view: analytics {
     }
   }
 
+  # dimension: covid_status {
+  #   type: string
+  #   sql: ${asldkfjasdlfkjasdlfkj} ;;
+  # }
+
 ##################
 ### Patient Location
 ##################

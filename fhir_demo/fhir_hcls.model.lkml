@@ -9,6 +9,27 @@ label: "FHIR Block (HCLS)"
 
 #### CCF Model ####
 
+explore: fhir_hcls_erd {
+  extends: [fhir_hcls]
+  label: "FHIR - ERD Test"
+  fields: [
+        encounter.id
+      , patient.id
+      , observation.id
+      , condition.id
+      , organization.id
+      , practitioner.id
+      , procedure.id
+      , analytics.admission_date
+      , nested_structs.condition__context__encounter_id
+      , nested_structs.encounter__subject__patient_id
+      , nested_structs.observation__context__encounter_id
+      , nested_structs.encounter__service_provider__organization_id
+      , nested_structs.encounter__participant__individual__practitioner_id
+      , nested_structs.procedure__context__encounter_id
+  ]
+}
+
 explore: fhir_hcls_simple {
   extends: [fhir_hcls]
   label: "*FHIR (HCLS - Simple)"
