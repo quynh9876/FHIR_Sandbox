@@ -324,11 +324,11 @@ view: analytics {
         name: "some_auth_code"
         value: "abc123456"
       }
-      form_param: {
-        name: "Phone Number"
-        required: yes
-        default: "{{ organization_telephone._value }}"
-      }
+      # form_param: {
+      #   name: "Phone Number"
+      #   required: yes
+      #   default: "{{ organization_telephone._value }}"
+      # }
     }
   }
   measure: min_organization_name {
