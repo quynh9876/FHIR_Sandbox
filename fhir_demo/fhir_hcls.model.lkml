@@ -7,7 +7,7 @@ include: "/fhir_demo/*.dashboard.lookml"   # include a LookML dashboard called m
 
 label: "FHIR Block (HCLS)"
 
-#### CCF Model ####
+#### Model ####
 
 explore: fhir_hcls_erd {
   extends: [fhir_hcls]
