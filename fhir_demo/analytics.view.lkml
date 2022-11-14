@@ -135,7 +135,7 @@ view: analytics {
     sql: concat(substr(${patient__name__given.patient__name__given},1,length(${patient__name__given.patient__name__given})-3), ' ',substr(${patient__name.family},1,length(${patient__name.family})-3)) ;;
     link: {
       label: "{{ value }} - Deep Dive"
-      url: "/dashboards/549?Patient%20Name={{ value }}"
+      url: "/dashboards/15?Patient%20Name={{ value }}"
       icon_url: "http://www.google.com/s2/favicons?domain=www.looker.com"
     }
     action: {
@@ -314,12 +314,12 @@ view: analytics {
     drill_fields: [practitioner_name, patient_age_tier, patient_postal_code]
     link: {
       label: "{{ value }} - Deep Dive"
-      url: "/dashboards/547?Facility%20Name={{ value }}"
+      url: "/dashboards/13?Facility%20Name={{ value }}"
       icon_url: "http://www.google.com/s2/favicons?domain=www.looker.com"
     }
     link: {
       label: "{{ value }} - Vulnerability Score & SDOH"
-      url: "/dashboards/546?Hospital%20Name={{ value }}"
+      url: "/dashboards/12?Hospital%20Name={{ value }}"
       icon_url: "http://www.google.com/s2/favicons?domain=www.looker.com"
     }
     link: {
@@ -423,7 +423,7 @@ view: analytics {
     # sql: concat(substr(${patient__name.family},1,length(${patient__name.family})-3), ', ',substr(${patient__name__given.patient__name__given},1,length(${patient__name__given.patient__name__given})-3)) ;;
     link: {
       label: "{{ value }} Deep Dive"
-      url: "/dashboards/548?Provider%20Name={{ value }}"
+      url: "/dashboards/14?Provider%20Name={{ value }}"
       icon_url: "http://www.google.com/s2/favicons?domain=www.looker.com"
     }
     link: {
