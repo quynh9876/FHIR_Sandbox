@@ -52,7 +52,8 @@ view: analytics {
     sql: TIMESTAMP_ADD(cast(${nested_structs.encounter__period__end_raw} as timestamp), INTERVAL DATE_DIFF(current_date(), '2019-09-15', day) day) ;;
   }
 
-  dimension_group: length_of_stay {
+  dimension_group: length_of_stay_x {
+    hidden: yes
     description: "Length of hospital stay"
     type: duration
     sql_start: ${admission_raw} ;;
@@ -65,6 +66,16 @@ view: analytics {
       month,
       year
     ]
+  }
+
+  dimension: length_of_stay_day {
+    type: number
+    sql: date_diff(${discharge_date},${admission_date},day) ;;
+  }
+
+  measure: average_length_of_stay {
+    type: average
+    sql: ${length_of_stay_day} ;;
   }
 
 ##################
@@ -735,75 +746,75 @@ view: analytics {
 ### Length of Stay (Inpatient)
 ##################
 
-  measure: length_of_stay_hours {
-    group_label: "Duration - Length of Stay (Inpatient)"
-    label: "Length of Stay (Hours)"
-    description: "How many hours did an inpatient stay last?"
-    hidden: yes
-    type: average
-    sql: ${hours_length_of_stay} ;;
-    filters: [encounter_type: "IMP"]
-    drill_fields: [drill*]
-  }
+  # measure: length_of_stay_hours {
+  #   group_label: "Duration - Length of Stay (Inpatient)"
+  #   label: "Length of Stay (Hours)"
+  #   description: "How many hours did an inpatient stay last?"
+  #   hidden: yes
+  #   type: average
+  #   sql: ${hours_length_of_stay} ;;
+  #   filters: [encounter_type: "IMP"]
+  #   drill_fields: [drill*]
+  # }
 
-  measure: length_of_stay_days {
-    group_label: "Duration - Length of Stay (Inpatient)"
-    label: "Length of Stay (Days)"
-    description: "How many days did an inpatient stay last?"
-    hidden: yes
-    type: average
-    sql: ${days_length_of_stay} ;;
-    filters: [encounter_type: "IMP"]
-    drill_fields: [drill*]
-  }
+  # measure: length_of_stay_days {
+  #   group_label: "Duration - Length of Stay (Inpatient)"
+  #   label: "Length of Stay (Days)"
+  #   description: "How many days did an inpatient stay last?"
+  #   hidden: yes
+  #   type: average
+  #   sql: ${days_length_of_stay} ;;
+  #   filters: [encounter_type: "IMP"]
+  #   drill_fields: [drill*]
+  # }
 
-  measure: length_of_stay_weeks {
-    group_label: "Duration - Length of Stay (Inpatient)"
-    label: "Length of Stay (Weeks)"
-    description: "How many weeks did an inpatient stay last?"
-    hidden: yes
-    type: average
-    sql: ${weeks_length_of_stay} ;;
-    filters: [encounter_type: "IMP"]
-    drill_fields: [drill*]
-  }
+  # measure: length_of_stay_weeks {
+  #   group_label: "Duration - Length of Stay (Inpatient)"
+  #   label: "Length of Stay (Weeks)"
+  #   description: "How many weeks did an inpatient stay last?"
+  #   hidden: yes
+  #   type: average
+  #   sql: ${weeks_length_of_stay} ;;
+  #   filters: [encounter_type: "IMP"]
+  #   drill_fields: [drill*]
+  # }
 
 ##################
 ### Visit Duration (Office Visit)
 ##################
 
-  measure: office_visit_minutes {
-    group_label: "Duration - Visit Duration (Office Visit)"
-    label: "Visit Duration (Minutes)"
-    description: "How many minutes did an office visit last?"
-    hidden: yes
-    type: average
-    sql: ${minutes_length_of_stay} ;;
-    filters: [encounter_type: "AMB"]
-    drill_fields: [drill*]
-  }
+  # measure: office_visit_minutes {
+  #   group_label: "Duration - Visit Duration (Office Visit)"
+  #   label: "Visit Duration (Minutes)"
+  #   description: "How many minutes did an office visit last?"
+  #   hidden: yes
+  #   type: average
+  #   sql: ${minutes_length_of_stay} ;;
+  #   filters: [encounter_type: "AMB"]
+  #   drill_fields: [drill*]
+  # }
 
-  measure: office_visit_hours {
-    group_label: "Duration - Visit Duration (Office Visit)"
-    label: "Visit Duration (Hours)"
-    description: "How many hours did an office visit stay last?"
-    hidden: yes
-    type: average
-    sql: ${hours_length_of_stay} ;;
-    filters: [encounter_type: "AMB"]
-    drill_fields: [drill*]
-  }
+  # measure: office_visit_hours {
+  #   group_label: "Duration - Visit Duration (Office Visit)"
+  #   label: "Visit Duration (Hours)"
+  #   description: "How many hours did an office visit stay last?"
+  #   hidden: yes
+  #   type: average
+  #   sql: ${hours_length_of_stay} ;;
+  #   filters: [encounter_type: "AMB"]
+  #   drill_fields: [drill*]
+  # }
 
-  measure: office_visit_days {
-    group_label: "Duration - Visit Duration (Office Visit)"
-    label: "Visit Duration (Days)"
-    description: "How many days did an office visit stay last?"
-    hidden: yes
-    type: average
-    sql: ${days_length_of_stay} ;;
-    filters: [encounter_type: "AMB"]
-    drill_fields: [drill*]
-  }
+  # measure: office_visit_days {
+  #   group_label: "Duration - Visit Duration (Office Visit)"
+  #   label: "Visit Duration (Days)"
+  #   description: "How many days did an office visit stay last?"
+  #   hidden: yes
+  #   type: average
+  #   sql: ${days_length_of_stay} ;;
+  #   filters: [encounter_type: "AMB"]
+  #   drill_fields: [drill*]
+  # }
 
 ##################
 ### Overall COVID Count
